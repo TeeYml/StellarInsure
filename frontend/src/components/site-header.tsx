@@ -12,6 +12,7 @@ import { CommandPalette } from "@/components/command-palette";
 import { KeyboardShortcutsHelp } from "@/components/keyboard-shortcuts-help";
 import { NotificationsPanel } from "@/components/notifications-panel";
 import { Icon } from "@/components/icon";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 type NavItem = {
   href: string;
@@ -124,7 +125,7 @@ export function SiteHeader() {
           </button>
           <CommandPalette />
           <KeyboardShortcutsHelp />
-          <NetworkBadge />
+          <ThemeToggle />
           <NetworkSwitcher />
           <WalletConnectionButton />
           <LanguageSwitcher />
@@ -152,7 +153,7 @@ export function SiteHeader() {
         <div className="mobile-drawer__actions">
           <CommandPalette />
           <KeyboardShortcutsHelp />
-          <NetworkBadge />
+          <ThemeToggle />
           <NetworkSwitcher />
           <WalletConnectionButton />
           <LanguageSwitcher />
