@@ -18,6 +18,9 @@ node_modules/
 out/
 build/
 dist/
+.cache/
+.npm/
+.yarn/
 
 # Environment
 .env
