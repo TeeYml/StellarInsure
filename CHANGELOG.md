@@ -1,3 +1,10 @@
+## [1.18.1](https://github.com/ChaoLing140/StellarInsure/compare/v1.18.0...v1.18.1) (2026-04-29)
+
+
+### Bug Fixes
+
+* replace console.log with proper logging mechanism ([761346c](https://github.com/ChaoLing140/StellarInsure/commit/761346c23109b0f76562167ef59354582937ade8)), closes [#282](https://github.com/ChaoLing140/StellarInsure/issues/282)
+
 # [1.18.0](https://github.com/ChaoLing140/StellarInsure/compare/v1.17.0...v1.18.0) (2026-04-29)
 
 
