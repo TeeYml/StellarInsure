@@ -21,7 +21,7 @@ export default function HomePage() {
   }, [locale]);
 
   return (
-    <main id="main-content" tabIndex={-1}>
+    <main id="main-content" tabIndex={-1} style={{ overflowX: "hidden" }}>
       <OnboardingChecklist />
       <section className="hero" id="overview" aria-labelledby="hero-title">
         <div className="hero-grid">
@@ -33,10 +33,10 @@ export default function HomePage() {
             <p className="hero-description">{t("hero.description")}</p>
 
             <div className="cta-row hero-cta">
-              <a className="cta-primary cta-primary--large" href="#coverage" data-onboarding="hero-primary-cta">
+              <a className="cta-primary cta-primary--large" href="#coverage" data-onboarding="hero-primary-cta" rel="noopener noreferrer">
                 {t("hero.primaryCta")}
               </a>
-              <a className="cta-secondary cta-secondary--large" href="#workflow">
+              <a className="cta-secondary cta-secondary--large" href="#workflow" rel="noopener noreferrer">
                 {t("hero.secondaryCta")}
               </a>
             </div>
