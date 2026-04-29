@@ -1,3 +1,11 @@
+# [1.21.0](https://github.com/ChaoLing140/StellarInsure/compare/v1.20.0...v1.21.0) (2026-04-29)
+
+
+### Features
+
+* fix issues [#285](https://github.com/ChaoLing140/StellarInsure/issues/285) and [#283](https://github.com/ChaoLing140/StellarInsure/issues/283) ([4ecde49](https://github.com/ChaoLing140/StellarInsure/commit/4ecde499a25d4a15ff787b94834bdb6a586cc6ed))
+* implement issue [#207](https://github.com/ChaoLing140/StellarInsure/issues/207) - API client integration ([2032b2c](https://github.com/ChaoLing140/StellarInsure/commit/2032b2c22fe0e6340360074869d91fab5b4f39a0))
+
 # [1.20.0](https://github.com/ChaoLing140/StellarInsure/compare/v1.19.0...v1.20.0) (2026-04-29)
 
 
