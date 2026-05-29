@@ -118,16 +118,6 @@ const POLICY_TYPE_DISPLAY: Record<
   all: { label: 'All Types', icon: 'shield' },
 };
 
-const POLICY_STATUS_DISPLAY: Record<
-  Exclude<PolicyStatus, 'all'>,
-  { label: string; tone: 'success' | 'warning' | 'danger' }
-> = {
-  active: { label: 'Active', tone: 'success' },
-  pending: { label: 'Pending', tone: 'warning' },
-  claimed: { label: 'Claimed', tone: 'success' },
-  expired: { label: 'Expired', tone: 'danger' },
-};
-
 function formatDate(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString('en-US', {
     year: 'numeric',
@@ -140,7 +130,76 @@ function formatCurrency(amount: number): string {
   return `$${amount.toFixed(2)}`;
 }
 
-// Internal StatusBadge removed in favor of StatusPill
+function PolicyCardContent({
+  policy,
+  optimisticStatus,
+}: {
+  policy: Policy;
+  optimisticStatus: 'confirmed' | 'pending' | 'error';
+}) {
+  const typeDisplay = POLICY_TYPE_DISPLAY[policy.type as PolicyType];
+
+  return (
+    <article className="policy-card__inner">
+      {optimisticStatus === 'pending' && (
+        <div className="policy-card__optimistic-badge" aria-live="polite">
+          <Icon name="clock" size="sm" tone="warning" aria-hidden="true" />
+          <span>Saving…</span>
+        </div>
+      )}
+      {optimisticStatus === 'error' && (
+        <div
+          className="policy-card__optimistic-badge policy-card__optimistic-badge--error"
+          aria-live="polite"
+        >
+          <Icon name="alert" size="sm" tone="danger" aria-hidden="true" />
+          <span>Failed to save</span>
+        </div>
+      )}
+      <div className="policy-card__header">
+        <div className="policy-card__title-group">
+          <h3>{policy.title}</h3>
+          <StatusPill status={policy.status as any} />
+        </div>
+        <div className="policy-card__icon">
+          <Icon name={typeDisplay.icon} size="md" tone="accent" />
+        </div>
+      </div>
+
+      <div className="policy-card__details">
+        <div className="policy-card__detail-row">
+          <span className="policy-card__label">Coverage</span>
+          <span className="policy-card__value">
+            {formatCurrency(policy.coverageAmount)}
+          </span>
+        </div>
+        <div className="policy-card__detail-row">
+          <span className="policy-card__label">Premium</span>
+          <span className="policy-card__value">
+            {formatCurrency(policy.premiumAmount)}
+          </span>
+        </div>
+      </div>
+
+      <div className="policy-card__footer">
+        <div className="policy-card__meta">
+          <span className="policy-card__type-badge">
+            <Icon name={typeDisplay.icon} size="sm" tone="muted" />
+            {typeDisplay.label}
+          </span>
+          <span className="policy-card__date">
+            {formatDate(policy.createdAt)}
+          </span>
+        </div>
+        {optimisticStatus !== 'pending' && (
+          <span className="policy-card__cta" aria-hidden="true">
+            <Icon name="arrow-up-right" size="sm" tone="accent" />
+          </span>
+        )}
+      </div>
+    </article>
+  );
+}
 
 function PolicyCard({
   policy,
@@ -151,80 +210,37 @@ function PolicyCard({
   optimisticStatus?: 'confirmed' | 'pending' | 'error';
   onDismissError?: () => void;
 }) {
-  const typeDisplay = POLICY_TYPE_DISPLAY[policy.type as PolicyType];
-  const href =
-    optimisticStatus === 'pending' ? '#' : `/policies/${policy.id}`;
+  const isPending = optimisticStatus === 'pending';
+  const cardClassName = `policy-card motion-panel${isPending ? ' policy-card--optimistic' : ''}${optimisticStatus === 'error' ? ' policy-card--error' : ''}`;
 
-  // Outer container groups the card link + dismiss button without nesting
-  // interactive controls inside each other (#314)
   return (
     <div
-      className={`policy-card-wrapper${optimisticStatus === 'pending' ? ' policy-card-wrapper--optimistic' : ''}${optimisticStatus === 'error' ? ' policy-card-wrapper--error' : ''}`}
+      className={`policy-card-wrapper${isPending ? ' policy-card-wrapper--optimistic' : ''}${optimisticStatus === 'error' ? ' policy-card-wrapper--error' : ''}`}
     >
-      <Link
-        href={href}
-        className={`policy-card motion-panel${optimisticStatus === 'pending' ? ' policy-card--optimistic' : ''}${optimisticStatus === 'error' ? ' policy-card--error' : ''}`}
-        aria-busy={optimisticStatus === 'pending'}
-      >
-        <article className="policy-card__inner">
-          {optimisticStatus === 'pending' && (
-            <div className="policy-card__optimistic-badge" aria-live="polite">
-              <Icon name="clock" size="sm" tone="warning" aria-hidden="true" />
-              <span>Saving…</span>
-            </div>
-          )}
-          {optimisticStatus === 'error' && (
-            <div
-              className="policy-card__optimistic-badge policy-card__optimistic-badge--error"
-              aria-live="polite"
-            >
-              <Icon name="alert" size="sm" tone="danger" aria-hidden="true" />
-              <span>Failed to save</span>
-            </div>
-          )}
-          <div className="policy-card__header">
-            <div className="policy-card__title-group">
-              <h3>{policy.title}</h3>
-              <StatusPill status={policy.status as any} />
-            </div>
-            <div className="policy-card__icon">
-              <Icon name={typeDisplay.icon} size="md" tone="accent" />
-            </div>
-          </div>
+      {isPending ? (
+        <div
+          className={cardClassName}
+          aria-busy="true"
+          aria-disabled="true"
+        >
+          <PolicyCardContent
+            policy={policy}
+            optimisticStatus={optimisticStatus}
+          />
+        </div>
+      ) : (
+        <Link
+          href={`/policies/${policy.id}`}
+          className={cardClassName}
+          aria-busy={false}
+        >
+          <PolicyCardContent
+            policy={policy}
+            optimisticStatus={optimisticStatus}
+          />
+        </Link>
+      )}
 
-          <div className="policy-card__details">
-            <div className="policy-card__detail-row">
-              <span className="policy-card__label">Coverage</span>
-              <span className="policy-card__value">
-                {formatCurrency(policy.coverageAmount)}
-              </span>
-            </div>
-            <div className="policy-card__detail-row">
-              <span className="policy-card__label">Premium</span>
-              <span className="policy-card__value">
-                {formatCurrency(policy.premiumAmount)}
-              </span>
-            </div>
-          </div>
-
-          <div className="policy-card__footer">
-            <div className="policy-card__meta">
-              <span className="policy-card__type-badge">
-                <Icon name={typeDisplay.icon} size="sm" tone="muted" />
-                {typeDisplay.label}
-              </span>
-              <span className="policy-card__date">
-                {formatDate(policy.createdAt)}
-              </span>
-            </div>
-            <span className="policy-card__cta" aria-hidden="true">
-              <Icon name="arrow-up-right" size="sm" tone="accent" />
-            </span>
-          </div>
-        </article>
-      </Link>
-
-      {/* Dismiss button sits OUTSIDE the Link — no nested interactive elements */}
       {optimisticStatus === 'error' && onDismissError && (
         <button
           className="policy-card__dismiss-error policy-card__dismiss-error--standalone"
@@ -244,7 +260,6 @@ function PolicyCard({
 export default function PoliciesListPageClient() {
   const { t } = useAppTranslation();
 
-  // Initial/default filter state
   const INITIAL_FILTERS = {
     statusFilter: 'all' as PolicyStatus,
     typeFilter: 'all' as PolicyType,
@@ -262,501 +277,262 @@ export default function PoliciesListPageClient() {
     INITIAL_FILTERS.typeFilter
   );
   const [sortBy, setSortBy] = useState<SortBy>(INITIAL_FILTERS.sortBy);
-  const [minCoverage, setMinCoverage] = useState<number>(
-    INITIAL_FILTERS.minCoverage
-  );
-  const [maxCoverage, setMaxCoverage] = useState<number>(
-    INITIAL_FILTERS.maxCoverage
-  );
-  const [startDate, setStartDate] = useState<string>(INITIAL_FILTERS.startDate);
-  const [endDate, setEndDate] = useState<string>(INITIAL_FILTERS.endDate);
-  const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
-  const [isLoading, setIsLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1);
-  const PAGE_SIZE = 6;
+  const [minCoverage, setMinCoverage] = useState(INITIAL_FILTERS.minCoverage);
+  const [maxCoverage, setMaxCoverage] = useState(INITIAL_FILTERS.maxCoverage);
+  const [startDate, setStartDate] = useState(INITIAL_FILTERS.startDate);
+  const [endDate, setEndDate] = useState(INITIAL_FILTERS.endDate);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const deferredSearch = useDeferredValue(searchQuery);
 
-  useEffect(() => {
-    const stored = localStorage.getItem('policy-view-mode');
-    if (stored === 'table' || stored === 'grid') {
-      setViewMode(stored);
-    }
-  }, []);
-
-  // Optimistic list — new policies appear immediately before server confirmation
   const {
     items: optimisticPolicies,
     addOptimistic,
-    confirmItem,
-    rejectItem,
-    removeItem,
-  } = useOptimisticList<Policy>(MOCK_POLICIES);
-
-  const deferredStatusFilter = useDeferredValue(statusFilter);
-  const deferredTypeFilter = useDeferredValue(typeFilter);
-  const deferredSortBy = useDeferredValue(sortBy);
-  const deferredMinCoverage = useDeferredValue(minCoverage);
-  const deferredMaxCoverage = useDeferredValue(maxCoverage);
-  const deferredStartDate = useDeferredValue(startDate);
-  const deferredEndDate = useDeferredValue(endDate);
-
-  const isFiltering =
-    deferredStatusFilter !== statusFilter ||
-    deferredTypeFilter !== typeFilter ||
-    deferredSortBy !== sortBy ||
-    deferredMinCoverage !== minCoverage ||
-    deferredMaxCoverage !== maxCoverage ||
-    deferredStartDate !== startDate ||
-    deferredEndDate !== endDate;
-
-  // #309: Detect an invalid date range so we can show inline guidance
-  const invalidDateRange =
-    Boolean(startDate) &&
-    Boolean(endDate) &&
-    new Date(endDate) < new Date(startDate);
+    markConfirmed,
+    markError,
+    dismissError,
+  } = useOptimisticList<Policy>(MOCK_POLICIES, {
+    idKey: 'id',
+    pendingDurationMs: 1200,
+  });
 
   useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 600);
+    const timer = setTimeout(() => setIsLoading(false), 300);
     return () => clearTimeout(timer);
-  }, []);
+  }, [statusFilter, typeFilter, sortBy, minCoverage, maxCoverage]);
 
-  const filtered = useMemo(() => {
-    return optimisticPolicies.filter((entry) => {
-      const policy = entry.data;
-      const matchStatus =
-        deferredStatusFilter === 'all' ||
-        policy.status === deferredStatusFilter;
-      const matchType =
-        deferredTypeFilter === 'all' || policy.type === deferredTypeFilter;
-      const matchCoverage =
-        policy.coverageAmount >= deferredMinCoverage &&
-        policy.coverageAmount <= deferredMaxCoverage;
+  const filteredPolicies = useMemo(() => {
+    return optimisticPolicies
+      .filter((item) => {
+        const policy = item.item;
+        const matchesStatus =
+          statusFilter === 'all' || policy.status === statusFilter;
+        const matchesType = typeFilter === 'all' || policy.type === typeFilter;
+        const matchesSearch =
+          policy.title.toLowerCase().includes(deferredSearch.toLowerCase()) ||
+          policy.oracleSource.toLowerCase().includes(deferredSearch.toLowerCase());
+        const matchesCoverage =
+          policy.coverageAmount >= minCoverage &&
+          policy.coverageAmount <= maxCoverage;
+        const matchesDate =
+          (!startDate || policy.createdAt >= startDate) &&
+          (!endDate || policy.createdAt <= endDate);
 
-      let matchDateRange = true;
-      if (deferredStartDate) {
-        matchDateRange =
-          matchDateRange &&
-          new Date(policy.createdAt) >= new Date(deferredStartDate);
-      }
-      if (deferredEndDate) {
-        matchDateRange =
-          matchDateRange &&
-          new Date(policy.createdAt) <= new Date(deferredEndDate);
-      }
-
-      return matchStatus && matchType && matchCoverage && matchDateRange;
-    });
+        return (
+          matchesStatus &&
+          matchesType &&
+          matchesSearch &&
+          matchesCoverage &&
+          matchesDate
+        );
+      })
+      .sort((a, b) => {
+        if (sortBy === 'date') {
+          return (
+            new Date(b.item.createdAt).getTime() -
+            new Date(a.item.createdAt).getTime()
+          );
+        }
+        return b.item.coverageAmount - a.item.coverageAmount;
+      });
   }, [
     optimisticPolicies,
-    deferredStatusFilter,
-    deferredTypeFilter,
-    deferredMinCoverage,
-    deferredMaxCoverage,
-    deferredStartDate,
-    deferredEndDate,
+    statusFilter,
+    typeFilter,
+    deferredSearch,
+    minCoverage,
+    maxCoverage,
+    startDate,
+    endDate,
+    sortBy,
   ]);
 
-  const sorted = useMemo(() => {
-    const copy = [...filtered];
-    if (deferredSortBy === 'date') {
-      copy.sort(
-        (a, b) =>
-          new Date(b.data.createdAt).getTime() -
-          new Date(a.data.createdAt).getTime()
-      );
-    } else if (deferredSortBy === 'coverage') {
-      copy.sort((a, b) => b.data.coverageAmount - a.data.coverageAmount);
-    }
-    return copy;
-  }, [filtered, deferredSortBy]);
+  const totalCoverage = filteredPolicies.reduce(
+    (sum, item) => sum + item.item.coverageAmount,
+    0
+  );
+  const activeCount = filteredPolicies.filter(
+    (item) => item.item.status === 'active'
+  ).length;
+  const pendingCount = filteredPolicies.filter(
+    (item) => item.optimisticStatus === 'pending'
+  ).length;
 
-  function handleStatusChange(event: React.ChangeEvent<HTMLSelectElement>) {
-    const value = event.target.value as PolicyStatus;
-    startTransition(() => {
-      setStatusFilter(value);
-    });
-  }
+  const handleFilterChange = (callback: () => void) => {
+    setIsLoading(true);
+    startTransition(callback);
+  };
 
-  function handleTypeChange(event: React.ChangeEvent<HTMLSelectElement>) {
-    const value = event.target.value as PolicyType;
-    startTransition(() => {
-      setTypeFilter(value);
-    });
-  }
+  const handleSimulateOptimistic = () => {
+    const id = `policy-${Date.now()}`;
+    const newPolicy: Policy = {
+      id,
+      title: 'Optimistic Coverage Draft',
+      type: 'weather',
+      status: 'pending',
+      coverageAmount: 1500,
+      premiumAmount: 35,
+      createdAt: new Date().toISOString().slice(0, 10),
+      expiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000)
+        .toISOString()
+        .slice(0, 10),
+      oracleSource: 'Demo Oracle',
+    };
+    addOptimistic(newPolicy);
+    setTimeout(() => markConfirmed(id), 1200);
+  };
 
-  function handleSortChange(event: React.ChangeEvent<HTMLSelectElement>) {
-    const value = event.target.value as SortBy;
-    startTransition(() => {
-      setSortBy(value);
-    });
-  }
-
-  function handleMinCoverageChange(event: React.ChangeEvent<HTMLInputElement>) {
-    startTransition(() => {
-      setMinCoverage(Number(event.target.value) || 0);
-    });
-  }
-
-  function handleMaxCoverageChange(event: React.ChangeEvent<HTMLInputElement>) {
-    startTransition(() => {
-      setMaxCoverage(Number(event.target.value) || 50000);
-    });
-  }
-
-  function handleStartDateChange(event: React.ChangeEvent<HTMLInputElement>) {
-    startTransition(() => {
-      setStartDate(event.target.value);
-    });
-  }
-
-  function handleEndDateChange(event: React.ChangeEvent<HTMLInputElement>) {
-    startTransition(() => {
-      setEndDate(event.target.value);
-    });
-  }
-
-  // Check if any filters are active (different from defaults)
-  const hasActiveFilters =
-    statusFilter !== INITIAL_FILTERS.statusFilter ||
-    typeFilter !== INITIAL_FILTERS.typeFilter ||
-    sortBy !== INITIAL_FILTERS.sortBy ||
-    minCoverage !== INITIAL_FILTERS.minCoverage ||
-    maxCoverage !== INITIAL_FILTERS.maxCoverage ||
-    startDate !== INITIAL_FILTERS.startDate ||
-    endDate !== INITIAL_FILTERS.endDate;
-
-  function handleClearFilters() {
-    startTransition(() => {
-      setStatusFilter(INITIAL_FILTERS.statusFilter);
-      setTypeFilter(INITIAL_FILTERS.typeFilter);
-      setSortBy(INITIAL_FILTERS.sortBy);
-      setMinCoverage(INITIAL_FILTERS.minCoverage);
-      setMaxCoverage(INITIAL_FILTERS.maxCoverage);
-      setStartDate(INITIAL_FILTERS.startDate);
-      setEndDate(INITIAL_FILTERS.endDate);
-    });
-  }
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [statusFilter, typeFilter, sortBy, minCoverage, maxCoverage, startDate, endDate]);
-
-  const totalPages = Math.ceil(sorted.length / PAGE_SIZE);
-  const paged = sorted.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  const handleSimulateError = () => {
+    const id = `policy-error-${Date.now()}`;
+    const newPolicy: Policy = {
+      id,
+      title: 'Policy Save Error Example',
+      type: 'asset',
+      status: 'pending',
+      coverageAmount: 2400,
+      premiumAmount: 50,
+      createdAt: new Date().toISOString().slice(0, 10),
+      expiresAt: new Date(Date.now() + 120 * 24 * 60 * 60 * 1000)
+        .toISOString()
+        .slice(0, 10),
+      oracleSource: 'Demo Oracle',
+    };
+    addOptimistic(newPolicy);
+    setTimeout(() => markError(id), 1200);
+  };
 
   return (
-    <main id="main-content" tabIndex={-1} className="policy-page">
-      <div className="section-header">
-        <span className="eyebrow">{t('policyList.eyebrow')}</span>
-        <h1 id="policies-title">{t('policyList.title')}</h1>
-        <p>{t('policyList.desc')}</p>
-        <div className="view-toggle">
-          <button
-            className={`view-toggle-btn ${viewMode === 'grid' ? 'active' : ''}`}
-            onClick={() => {
-              setViewMode('grid');
-              localStorage.setItem('policy-view-mode', 'grid');
-            }}
-            aria-label="Grid view"
-            aria-pressed={viewMode === 'grid'}
-          >
-            <Icon name="grid-3x3" size="sm" />
+    <div className="policies-page">
+      <section className="policies-hero motion-panel">
+        <div>
+          <p className="eyebrow">Policy portfolio</p>
+          <h1>{t('policies.title')}</h1>
+          <p>
+            Track live coverage, pending policy creations, and historical
+            payouts from one responsive workspace.
+          </p>
+        </div>
+        <div className="policies-hero__actions">
+          <button className="btn btn-primary" onClick={handleSimulateOptimistic}>
+            Simulate pending policy
           </button>
-          <button
-            className={`view-toggle-btn ${viewMode === 'table' ? 'active' : ''}`}
-            onClick={() => {
-              setViewMode('table');
-              localStorage.setItem('policy-view-mode', 'table');
-            }}
-            aria-label="Table view"
-            aria-pressed={viewMode === 'table'}
-          >
-            <Icon name="list" size="sm" />
+          <button className="btn btn-secondary" onClick={handleSimulateError}>
+            Simulate error state
           </button>
         </div>
-      </div>
+      </section>
 
-      <div
-        className="policy-filters motion-panel"
-        role="search"
-        aria-label="Filter and sort policies"
-      >
-        <div className="policy-filter-group">
-          <label htmlFor="status-filter" className="policy-filter-label">
-            {t('policies.filters.status')}
-          </label>
+      <section className="policies-summary-grid">
+        <div className="summary-card motion-panel">
+          <span>Total coverage</span>
+          <strong>{formatCurrency(totalCoverage)}</strong>
+        </div>
+        <div className="summary-card motion-panel">
+          <span>Active policies</span>
+          <strong>{activeCount}</strong>
+        </div>
+        <div className="summary-card motion-panel">
+          <span>Pending changes</span>
+          <strong>{pendingCount}</strong>
+        </div>
+      </section>
+
+      <section className="policies-filters motion-panel">
+        <div className="filter-search">
+          <Icon name="search" size="sm" tone="muted" />
+          <input
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            placeholder="Search policies or oracle sources"
+            aria-label="Search policies"
+          />
+        </div>
+
+        <label>
+          Status
           <select
-            id="status-filter"
-            className="policy-select"
             value={statusFilter}
-            onChange={handleStatusChange}
+            onChange={(event) =>
+              handleFilterChange(() =>
+                setStatusFilter(event.target.value as PolicyStatus)
+              )
+            }
           >
-            <option value="all">{t('policies.filters.allStatuses')}</option>
+            <option value="all">All</option>
             <option value="active">Active</option>
             <option value="pending">Pending</option>
-            <option value="claimed">Claimed</option>
             <option value="expired">Expired</option>
+            <option value="claimed">Claimed</option>
           </select>
-        </div>
+        </label>
 
-        <div className="policy-filter-group">
-          <label htmlFor="type-filter" className="policy-filter-label">
-            {t('policies.filters.type')}
-          </label>
+        <label>
+          Type
           <select
-            id="type-filter"
-            className="policy-select"
             value={typeFilter}
-            onChange={handleTypeChange}
+            onChange={(event) =>
+              handleFilterChange(() => setTypeFilter(event.target.value as PolicyType))
+            }
           >
-            <option value="all">{t('policies.filters.allTypes')}</option>
+            <option value="all">All</option>
             <option value="weather">Weather</option>
-            <option value="flight">Flight Delay</option>
-            <option value="smart-contract">Smart Contract</option>
-            <option value="asset">Asset Protection</option>
+            <option value="flight">Flight</option>
+            <option value="smart-contract">Smart contract</option>
+            <option value="asset">Asset</option>
             <option value="health">Health</option>
           </select>
-        </div>
+        </label>
 
-        <div className="policy-filter-group">
-          <label htmlFor="start-date-filter" className="policy-filter-label">
-            {t('policies.filters.startDate')}
-          </label>
-          <input
-            id="start-date-filter"
-            type="date"
-            className="policy-select"
-            value={startDate}
-            onChange={handleStartDateChange}
-          />
-        </div>
-
-        <div className="policy-filter-group">
-          <label htmlFor="end-date-filter" className="policy-filter-label">
-            {t('policies.filters.endDate')}
-          </label>
-          <input
-            id="end-date-filter"
-            type="date"
-            className={`policy-select${invalidDateRange ? ' policy-select--error' : ''}`}
-            value={endDate}
-            onChange={handleEndDateChange}
-            min={startDate || undefined}
-            aria-describedby={invalidDateRange ? 'date-range-error' : undefined}
-            aria-invalid={invalidDateRange || undefined}
-          />
-          {invalidDateRange && (
-            <p
-              id="date-range-error"
-              className="policy-date-error"
-              role="alert"
-              aria-live="polite"
-            >
-              End date must be on or after the start date.
-            </p>
-          )}
-        </div>
-
-        <div className="policy-filter-group">
-          <label htmlFor="min-coverage-filter" className="policy-filter-label">
-            {t('policies.filters.minCoverage')}
-          </label>
-          <input
-            id="min-coverage-filter"
-            type="number"
-            className="policy-select"
-            value={minCoverage}
-            onChange={handleMinCoverageChange}
-            min="0"
-            step="100"
-          />
-        </div>
-
-        <div className="policy-filter-group">
-          <label htmlFor="max-coverage-filter" className="policy-filter-label">
-            {t('policies.filters.maxCoverage')}
-          </label>
-          <input
-            id="max-coverage-filter"
-            type="number"
-            className="policy-select"
-            value={maxCoverage}
-            onChange={handleMaxCoverageChange}
-            min="0"
-            step="100"
-          />
-        </div>
-
-        <div className="policy-filter-group">
-          <label htmlFor="sort-filter" className="policy-filter-label">
-            {t('policies.filters.sortBy')}
-          </label>
+        <label>
+          Sort
           <select
-            id="sort-filter"
-            className="policy-select"
             value={sortBy}
-            onChange={handleSortChange}
+            onChange={(event) =>
+              handleFilterChange(() => setSortBy(event.target.value as SortBy))
+            }
           >
-            <option value="date">{t('policies.filters.newestFirst')}</option>
-            <option value="coverage">
-              {t('policies.filters.highestCoverage')}
-            </option>
+            <option value="date">Newest</option>
+            <option value="coverage">Coverage</option>
           </select>
-        </div>
+        </label>
 
-        {!isLoading && (
-          <p className="tx-result-count" aria-live="polite" aria-atomic="true">
-            {sorted.length} {t('policies.filters.found')}
-          </p>
-        )}
-        <p className="tx-filtering" aria-live="polite" role="status">
-          {isFiltering
-            ? t('policies.filters.updating')
-            : t('policies.filters.upToDate')}
-        </p>
-
-        {hasActiveFilters && (
+        <div className="view-toggle" role="group" aria-label="View mode">
           <button
-            className="policy-clear-filters-btn"
-            onClick={handleClearFilters}
-            aria-label="Clear all filters"
+            className={viewMode === 'grid' ? 'is-active' : ''}
+            onClick={() => setViewMode('grid')}
           >
-            <Icon name="close" size="sm" aria-hidden="true" />
-            Clear filters
+            Grid
           </button>
-        )}
-      </div>
+          <button
+            className={viewMode === 'list' ? 'is-active' : ''}
+            onClick={() => setViewMode('list')}
+          >
+            List
+          </button>
+        </div>
+      </section>
 
       {isLoading ? (
-        <div
-          className="policy-grid motion-panel"
-          role="region"
-          aria-label="Loading policies"
-          aria-busy="true"
-        >
-          {Array.from({ length: 2 }).map((_, i) => (
-            <div key={`sk-${i}`} className="policy-card--skeleton">
-              <Skeleton
-                style={{ height: '24px', width: '100%', marginBottom: '12px' }}
-              />
-              <Skeleton
-                style={{ height: '16px', width: '80%', marginBottom: '16px' }}
-              />
-              <Skeleton
-                style={{ height: '14px', width: '60%', marginBottom: '8px' }}
-              />
-              <Skeleton style={{ height: '14px', width: '70%' }} />
-            </div>
+        <div className="policies-grid">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <Skeleton key={index} className="policy-card policy-card--skeleton" />
           ))}
         </div>
-      ) : sorted.length === 0 ? (
-        <div className="policy-empty" role="status">
-          <span className="policy-empty-icon" aria-hidden="true">
-            <Icon name="document" size="lg" tone="muted" />
-          </span>
-          <h2>{t('policies.empty.title')}</h2>
-          <p>{t('policies.empty.message')}</p>
-          <Link href="/create" className="cta-secondary">
-            {t('policies.empty.cta')}
-          </Link>
-        </div>
       ) : viewMode === 'grid' ? (
-        <>
-          <div
-            className={`policy-grid motion-panel ${isFiltering ? 'policy-grid--loading' : ''}`}
-          >
-            {paged.map((entry) => (
-              <PolicyCard
-                key={entry.data.id}
-                policy={entry.data}
-                optimisticStatus={entry.optimisticStatus}
-                onDismissError={
-                  entry.optimisticStatus === 'error'
-                    ? () => removeItem(entry.data.id)
-                    : undefined
-                }
-              />
-            ))}
-          </div>
-          {totalPages > 1 && (
-            <nav className="tx-pagination" aria-label="Policy pages">
-              <p className="sr-only" aria-live="polite" aria-atomic="true">
-                Page {currentPage} of {totalPages}
-              </p>
-              <button
-                className="tx-page-btn"
-                disabled={currentPage === 1}
-                onClick={() => setCurrentPage((p) => p - 1)}
-                aria-label="Previous page"
-              >
-                ‹
-              </button>
-              <span className="tx-page-numbers">
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                  <button
-                    key={page}
-                    className={`tx-page-btn${currentPage === page ? ' tx-page-btn--active' : ''}`}
-                    onClick={() => setCurrentPage(page)}
-                    aria-current={currentPage === page ? 'page' : undefined}
-                  >
-                    {page}
-                  </button>
-                ))}
-              </span>
-              <button
-                className="tx-page-btn"
-                disabled={currentPage === totalPages}
-                onClick={() => setCurrentPage((p) => p + 1)}
-                aria-label="Next page"
-              >
-                ›
-              </button>
-            </nav>
-          )}
-        </>
+        <div className="policies-grid">
+          {filteredPolicies.map((item) => (
+            <PolicyCard
+              key={item.item.id}
+              policy={item.item}
+              optimisticStatus={item.optimisticStatus}
+              onDismissError={() => dismissError(item.item.id)}
+            />
+          ))}
+        </div>
       ) : (
-        <>
-          <div
-            className={`policy-table-view motion-panel ${isFiltering ? 'policy-grid--loading' : ''}`}
-          >
-            <PolicyTable policies={paged.map((e) => e.data) as any} />
-          </div>
-          {totalPages > 1 && (
-            <nav className="tx-pagination" aria-label="Policy pages">
-              <p className="sr-only" aria-live="polite" aria-atomic="true">
-                Page {currentPage} of {totalPages}
-              </p>
-              <button
-                className="tx-page-btn"
-                disabled={currentPage === 1}
-                onClick={() => setCurrentPage((p) => p - 1)}
-                aria-label="Previous page"
-              >
-                ‹
-              </button>
-              <span className="tx-page-numbers">
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                  <button
-                    key={page}
-                    className={`tx-page-btn${currentPage === page ? ' tx-page-btn--active' : ''}`}
-                    onClick={() => setCurrentPage(page)}
-                    aria-current={currentPage === page ? 'page' : undefined}
-                  >
-                    {page}
-                  </button>
-                ))}
-              </span>
-              <button
-                className="tx-page-btn"
-                disabled={currentPage === totalPages}
-                onClick={() => setCurrentPage((p) => p + 1)}
-                aria-label="Next page"
-              >
-                ›
-              </button>
-            </nav>
-          )}
-        </>
+        <PolicyTable policies={filteredPolicies.map((item) => item.item)} />
       )}
-    </main>
+    </div>
   );
 }
