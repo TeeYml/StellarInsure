@@ -446,12 +446,11 @@ export default function TransactionHistoryPage() {
                     {expandedId === tx.id && (
                       <tr
                         className="tx-detail-row"
-                        id={`tx-detail-${tx.id}`}
                         role="region"
                         aria-label="Transaction detail"
                       >
                         <td colSpan={6}>
-                          <div className="tx-detail-panel">
+                          <div className="tx-detail-panel" id={`tx-detail-${tx.id}`}>
                             {tx.status === 'failed' &&
                               retryingTransactionId === tx.id && (
                                 <div className="tx-detail-retry-section">
