@@ -152,82 +152,92 @@ function PolicyCard({
   onDismissError?: () => void;
 }) {
   const typeDisplay = POLICY_TYPE_DISPLAY[policy.type as PolicyType];
+  const href =
+    optimisticStatus === 'pending' ? '#' : `/policies/${policy.id}`;
 
+  // Outer container groups the card link + dismiss button without nesting
+  // interactive controls inside each other (#314)
   return (
-    <Link
-      href={optimisticStatus === 'pending' ? '#' : `/policies/${policy.id}`}
-      className={`policy-card motion-panel${optimisticStatus === 'pending' ? ' policy-card--optimistic' : ''}${optimisticStatus === 'error' ? ' policy-card--error' : ''}`}
-      aria-busy={optimisticStatus === 'pending'}
+    <div
+      className={`policy-card-wrapper${optimisticStatus === 'pending' ? ' policy-card-wrapper--optimistic' : ''}${optimisticStatus === 'error' ? ' policy-card-wrapper--error' : ''}`}
     >
-      <article className="policy-card__inner">
-        {optimisticStatus === 'pending' && (
-          <div className="policy-card__optimistic-badge" aria-live="polite">
-            <Icon name="clock" size="sm" tone="warning" aria-hidden="true" />
-            <span>Saving…</span>
+      <Link
+        href={href}
+        className={`policy-card motion-panel${optimisticStatus === 'pending' ? ' policy-card--optimistic' : ''}${optimisticStatus === 'error' ? ' policy-card--error' : ''}`}
+        aria-busy={optimisticStatus === 'pending'}
+      >
+        <article className="policy-card__inner">
+          {optimisticStatus === 'pending' && (
+            <div className="policy-card__optimistic-badge" aria-live="polite">
+              <Icon name="clock" size="sm" tone="warning" aria-hidden="true" />
+              <span>Saving…</span>
+            </div>
+          )}
+          {optimisticStatus === 'error' && (
+            <div
+              className="policy-card__optimistic-badge policy-card__optimistic-badge--error"
+              aria-live="polite"
+            >
+              <Icon name="alert" size="sm" tone="danger" aria-hidden="true" />
+              <span>Failed to save</span>
+            </div>
+          )}
+          <div className="policy-card__header">
+            <div className="policy-card__title-group">
+              <h3>{policy.title}</h3>
+              <StatusPill status={policy.status as any} />
+            </div>
+            <div className="policy-card__icon">
+              <Icon name={typeDisplay.icon} size="md" tone="accent" />
+            </div>
           </div>
-        )}
-        {optimisticStatus === 'error' && (
-          <div
-            className="policy-card__optimistic-badge policy-card__optimistic-badge--error"
-            aria-live="polite"
-          >
-            <Icon name="alert" size="sm" tone="danger" aria-hidden="true" />
-            <span>Failed to save</span>
-            {onDismissError && (
-              <button
-                className="policy-card__dismiss-error"
-                onClick={(e) => {
-                  e.preventDefault();
-                  onDismissError();
-                }}
-                aria-label="Dismiss error"
-              >
-                <Icon name="close" size="sm" tone="danger" />
-              </button>
-            )}
-          </div>
-        )}
-        <div className="policy-card__header">
-          <div className="policy-card__title-group">
-            <h3>{policy.title}</h3>
-            <StatusPill status={policy.status as any} />
-          </div>
-          <div className="policy-card__icon">
-            <Icon name={typeDisplay.icon} size="md" tone="accent" />
-          </div>
-        </div>
 
-        <div className="policy-card__details">
-          <div className="policy-card__detail-row">
-            <span className="policy-card__label">Coverage</span>
-            <span className="policy-card__value">
-              {formatCurrency(policy.coverageAmount)}
-            </span>
+          <div className="policy-card__details">
+            <div className="policy-card__detail-row">
+              <span className="policy-card__label">Coverage</span>
+              <span className="policy-card__value">
+                {formatCurrency(policy.coverageAmount)}
+              </span>
+            </div>
+            <div className="policy-card__detail-row">
+              <span className="policy-card__label">Premium</span>
+              <span className="policy-card__value">
+                {formatCurrency(policy.premiumAmount)}
+              </span>
+            </div>
           </div>
-          <div className="policy-card__detail-row">
-            <span className="policy-card__label">Premium</span>
-            <span className="policy-card__value">
-              {formatCurrency(policy.premiumAmount)}
-            </span>
-          </div>
-        </div>
 
-        <div className="policy-card__footer">
-          <div className="policy-card__meta">
-            <span className="policy-card__type-badge">
-              <Icon name={typeDisplay.icon} size="sm" tone="muted" />
-              {typeDisplay.label}
-            </span>
-            <span className="policy-card__date">
-              {formatDate(policy.createdAt)}
+          <div className="policy-card__footer">
+            <div className="policy-card__meta">
+              <span className="policy-card__type-badge">
+                <Icon name={typeDisplay.icon} size="sm" tone="muted" />
+                {typeDisplay.label}
+              </span>
+              <span className="policy-card__date">
+                {formatDate(policy.createdAt)}
+              </span>
+            </div>
+            <span className="policy-card__cta" aria-hidden="true">
+              <Icon name="arrow-up-right" size="sm" tone="accent" />
             </span>
           </div>
-          <span className="policy-card__cta" aria-hidden="true">
-            <Icon name="arrow-up-right" size="sm" tone="accent" />
-          </span>
-        </div>
-      </article>
-    </Link>
+        </article>
+      </Link>
+
+      {/* Dismiss button sits OUTSIDE the Link — no nested interactive elements */}
+      {optimisticStatus === 'error' && onDismissError && (
+        <button
+          className="policy-card__dismiss-error policy-card__dismiss-error--standalone"
+          onClick={(e) => {
+            e.preventDefault();
+            onDismissError();
+          }}
+          aria-label={`Dismiss error for ${policy.title}`}
+        >
+          <Icon name="close" size="sm" tone="danger" />
+        </button>
+      )}
+    </div>
   );
 }
 
@@ -297,6 +307,12 @@ export default function PoliciesListPageClient() {
     deferredMaxCoverage !== maxCoverage ||
     deferredStartDate !== startDate ||
     deferredEndDate !== endDate;
+
+  // #309: Detect an invalid date range so we can show inline guidance
+  const invalidDateRange =
+    Boolean(startDate) &&
+    Boolean(endDate) &&
+    new Date(endDate) < new Date(startDate);
 
   useEffect(() => {
     const timer = setTimeout(() => setIsLoading(false), 600);
@@ -441,6 +457,7 @@ export default function PoliciesListPageClient() {
               localStorage.setItem('policy-view-mode', 'grid');
             }}
             aria-label="Grid view"
+            aria-pressed={viewMode === 'grid'}
           >
             <Icon name="grid-3x3" size="sm" />
           </button>
@@ -451,6 +468,7 @@ export default function PoliciesListPageClient() {
               localStorage.setItem('policy-view-mode', 'table');
             }}
             aria-label="Table view"
+            aria-pressed={viewMode === 'table'}
           >
             <Icon name="list" size="sm" />
           </button>
@@ -519,10 +537,23 @@ export default function PoliciesListPageClient() {
           <input
             id="end-date-filter"
             type="date"
-            className="policy-select"
+            className={`policy-select${invalidDateRange ? ' policy-select--error' : ''}`}
             value={endDate}
             onChange={handleEndDateChange}
+            min={startDate || undefined}
+            aria-describedby={invalidDateRange ? 'date-range-error' : undefined}
+            aria-invalid={invalidDateRange || undefined}
           />
+          {invalidDateRange && (
+            <p
+              id="date-range-error"
+              className="policy-date-error"
+              role="alert"
+              aria-live="polite"
+            >
+              End date must be on or after the start date.
+            </p>
+          )}
         </div>
 
         <div className="policy-filter-group">

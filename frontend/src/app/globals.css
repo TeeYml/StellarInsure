@@ -757,6 +757,38 @@ dt,
   font-size: var(--step-0);
 }
 
+/* Clear filters button — transaction history (#307) */
+.tx-clear-filters-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.9rem;
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-md);
+  background: var(--surface-raised);
+  color: var(--text-muted);
+  font-size: var(--step--1);
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    color 0.15s,
+    background 0.15s;
+  white-space: nowrap;
+  align-self: flex-end;
+}
+
+.tx-clear-filters-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.tx-clear-filters-btn:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
 .tx-table-wrapper {
   overflow-x: auto;
   transition:
@@ -3759,6 +3791,94 @@ dt,
   display: flex;
   flex-direction: column;
   gap: 1rem;
+}
+
+/* Policy Card Wrapper — outer shell that groups Link + dismiss btn (#314) */
+.policy-card-wrapper {
+  position: relative;
+}
+
+/* Standalone dismiss button positioned outside the card Link */
+.policy-card__dismiss-error--standalone {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--danger-soft);
+  color: var(--danger-strong);
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    transform 0.15s;
+}
+
+.policy-card__dismiss-error--standalone:hover {
+  background: var(--danger-strong);
+  color: #fff;
+  transform: scale(1.1);
+}
+
+.policy-card__dismiss-error--standalone:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* Clear filters button — policies page (mirrors tx variant) */
+.policy-clear-filters-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.9rem;
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-md);
+  background: var(--surface-raised);
+  color: var(--text-muted);
+  font-size: var(--step--1);
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    color 0.15s,
+    background 0.15s;
+  white-space: nowrap;
+  align-self: flex-end;
+}
+
+.policy-clear-filters-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.policy-clear-filters-btn:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* Date range validation error (#309) */
+.policy-date-error {
+  margin: 0.35rem 0 0;
+  font-size: var(--step--1);
+  color: var(--danger-strong);
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.policy-select--error {
+  border-color: var(--danger-strong);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger-strong) 15%, transparent);
+}
+
+.policy-select--error:focus {
+  border-color: var(--danger-strong);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger-strong) 20%, transparent);
 }
 
 /* Policy Empty State */
