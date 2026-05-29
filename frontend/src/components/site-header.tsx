@@ -1,6 +1,12 @@
 'use client';
 
-import React, { useMemo, useState, useEffect, useRef } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -27,6 +33,15 @@ const NAV_ITEMS: NavItem[] = [
   { href: '/treasury', label: 'Treasury' },
   { href: '/settings', label: 'Preferences' },
 ];
+
+const FOCUSABLE_SELECTOR = [
+  'a[href]',
+  'button:not([disabled])',
+  'input:not([disabled])',
+  'select:not([disabled])',
+  'textarea:not([disabled])',
+  '[tabindex]:not([tabindex="-1"])',
+].join(',');
 
 const PAGE_CONTEXT: Record<string, { title: string; description: string }> = {
   '/': {
@@ -82,31 +97,95 @@ export function SiteHeader() {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const context = useMemo(() => getPageContext(pathname), [pathname]);
   const triggerRef = useRef<HTMLButtonElement>(null);
+  const drawerRef = useRef<HTMLElement>(null);
+  const notificationsTriggerRef = useRef<HTMLButtonElement>(null);
 
-  function closeDrawer() {
+  const closeDrawer = useCallback(() => {
     setDrawerOpen(false);
-    // Restore focus to trigger button when closing
     triggerRef.current?.focus();
-  }
+  }, []);
 
-  // Add Escape key listener when drawer is open
   useEffect(() => {
     if (!drawerOpen) return;
 
-    function handleEscape(event: KeyboardEvent) {
+    const focusableElements = Array.from(
+      drawerRef.current?.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR) ?? []
+    ).filter((element) => !element.hasAttribute('disabled'));
+
+    const firstFocusable = focusableElements[0] ?? drawerRef.current;
+    firstFocusable?.focus();
+  }, [drawerOpen]);
+
+  useEffect(() => {
+    if (!drawerOpen) return;
+
+    function handleDocumentKeyDown(event: KeyboardEvent) {
       if (event.key === 'Escape') {
+        event.preventDefault();
         closeDrawer();
       }
     }
 
-    document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
-  }, [drawerOpen]);
+    document.addEventListener('keydown', handleDocumentKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleDocumentKeyDown);
+    };
+  }, [closeDrawer, drawerOpen]);
+
+  const handleDrawerKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLElement>) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        event.stopPropagation();
+        closeDrawer();
+        return;
+      }
+
+      if (event.key !== 'Tab') return;
+
+      const focusableElements = Array.from(
+        drawerRef.current?.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR) ??
+          []
+      ).filter((element) => !element.hasAttribute('disabled'));
+
+      if (focusableElements.length === 0) {
+        event.preventDefault();
+        drawerRef.current?.focus();
+        return;
+      }
+
+      const firstFocusable = focusableElements[0];
+      const lastFocusable = focusableElements[focusableElements.length - 1];
+
+      if (event.shiftKey && document.activeElement === firstFocusable) {
+        event.preventDefault();
+        lastFocusable.focus();
+      } else if (!event.shiftKey && document.activeElement === lastFocusable) {
+        event.preventDefault();
+        firstFocusable.focus();
+      }
+    },
+    [closeDrawer]
+  );
+
+  function toggleDrawer() {
+    if (drawerOpen) {
+      closeDrawer();
+    } else {
+      setDrawerOpen(true);
+    }
+  }
 
   return (
     <>
       <header className="topbar" aria-label="Primary">
-        <Link className="brand" href="/" onClick={closeDrawer}>
+        <Link
+          className="brand"
+          href="/"
+          onClick={() => {
+            if (drawerOpen) closeDrawer();
+          }}
+        >
           <span className="brand-mark" aria-hidden="true">
             SI
           </span>
@@ -120,11 +199,12 @@ export function SiteHeader() {
           ref={triggerRef}
           type="button"
           className="mobile-nav-toggle"
+          aria-label={drawerOpen ? 'Close menu' : 'Open menu'}
           aria-expanded={drawerOpen}
           aria-controls="mobile-nav-drawer"
-          onClick={() => setDrawerOpen((open) => !open)}
+          onClick={toggleDrawer}
         >
-          {drawerOpen ? 'Close menu' : 'Open menu'}
+          <Icon name={drawerOpen ? 'close' : 'menu'} size="md" tone="muted" />
         </button>
 
         <nav
@@ -144,6 +224,7 @@ export function SiteHeader() {
 
         <div className="topbar-actions topbar-actions--desktop">
           <button
+            ref={notificationsTriggerRef}
             className="topbar-action-btn"
             onClick={() => setNotificationsOpen(true)}
             aria-label="Open notifications"
@@ -165,9 +246,12 @@ export function SiteHeader() {
         onClick={closeDrawer}
       />
       <aside
+        ref={drawerRef}
         id="mobile-nav-drawer"
         className={`mobile-drawer ${drawerOpen ? 'is-open' : ''}`}
         aria-hidden={!drawerOpen}
+        onKeyDown={handleDrawerKeyDown}
+        tabIndex={-1}
       >
         <nav
           className="mobile-drawer__links"
@@ -205,6 +289,7 @@ export function SiteHeader() {
       <NotificationsPanel
         isOpen={notificationsOpen}
         onClose={() => setNotificationsOpen(false)}
+        returnFocusRef={notificationsTriggerRef}
       />
     </>
   );

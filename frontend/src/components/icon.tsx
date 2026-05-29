@@ -1,51 +1,52 @@
-import React from "react";
+import React from 'react';
 
 export type IconName =
-  | "alert"
-  | "calendar"
-  | "check"
-  | "clock"
-  | "document"
-  | "globe"
-  | "heart"
-  | "language"
-  | "shield"
-  | "spark"
-  | "wallet"
-  | "arrow-up-right"
-  | "chevron-down"
-  | "chevron-up"
-  | "help"
-  | "refresh"
-  | "plus"
-  | "close"
-  | "grid-3x3"
-  | "list"
-  | "chevron-up-down"
-  | "zap"
-  | "alert-triangle"
-  | "activity"
-  | "layers"
-  | "trending-up"
-  | "trending-down"
-  | "verify"
-  | "alert-circle"
-  | "copy"
-  | "upload"
-  | "trash"
-  | "edit"
-  | "chevron-right"
-  | "bell";
+  | 'alert'
+  | 'calendar'
+  | 'check'
+  | 'clock'
+  | 'document'
+  | 'globe'
+  | 'heart'
+  | 'language'
+  | 'shield'
+  | 'spark'
+  | 'wallet'
+  | 'arrow-up-right'
+  | 'chevron-down'
+  | 'chevron-up'
+  | 'help'
+  | 'refresh'
+  | 'plus'
+  | 'menu'
+  | 'close'
+  | 'grid-3x3'
+  | 'list'
+  | 'chevron-up-down'
+  | 'zap'
+  | 'alert-triangle'
+  | 'activity'
+  | 'layers'
+  | 'trending-up'
+  | 'trending-down'
+  | 'verify'
+  | 'alert-circle'
+  | 'copy'
+  | 'upload'
+  | 'trash'
+  | 'edit'
+  | 'chevron-right'
+  | 'bell';
 
-type IconSize = "sm" | "md" | "lg";
+type IconSize = 'sm' | 'md' | 'lg';
 type IconTone =
-  | "default"
-  | "muted"
-  | "accent"
-  | "warning"
-  | "success"
-  | "danger"
-  | "contrast";
+  | 'default'
+  | 'muted'
+  | 'accent'
+  | 'warning'
+  | 'success'
+  | 'danger'
+  | 'contrast';
 
 type IconProps = {
   name: IconName;
@@ -53,7 +54,7 @@ type IconProps = {
   tone?: IconTone;
   label?: string;
   className?: string;
-  "aria-hidden"?: boolean | "true" | "false";
+  'aria-hidden'?: boolean | 'true' | 'false';
 };
 
 const sizeMap: Record<IconSize, number> = {
@@ -63,18 +64,18 @@ const sizeMap: Record<IconSize, number> = {
 };
 
 const toneMap: Record<IconTone, string> = {
-  default: "var(--text)",
-  muted: "var(--text-muted)",
-  accent: "var(--accent-strong)",
-  warning: "var(--warning-strong)",
-  success: "var(--success-strong)",
-  danger: "var(--danger-strong)",
-  contrast: "var(--surface)",
+  default: 'var(--text)',
+  muted: 'var(--text-muted)',
+  accent: 'var(--accent-strong)',
+  warning: 'var(--warning-strong)',
+  success: 'var(--success-strong)',
+  danger: 'var(--danger-strong)',
+  contrast: 'var(--surface)',
 };
 
 function getPath(name: IconName) {
   switch (name) {
-    case "alert":
+    case 'alert':
       return (
         <>
           <path d="M12 9v4" />
@@ -82,7 +83,7 @@ function getPath(name: IconName) {
           <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z" />
         </>
       );
-    case "calendar":
+    case 'calendar':
       return (
         <>
           <path d="M8 2v4" />
@@ -91,16 +92,16 @@ function getPath(name: IconName) {
           <path d="M3 10h18" />
         </>
       );
-    case "check":
+    case 'check':
       return <path d="M5 12l5 5L20 7" />;
-    case "clock":
+    case 'clock':
       return (
         <>
           <circle cx="12" cy="12" r="9" />
           <path d="M12 7v6l4 2" />
         </>
       );
-    case "document":
+    case 'document':
       return (
         <>
           <path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7Z" />
@@ -109,11 +110,11 @@ function getPath(name: IconName) {
           <path d="M9 17h6" />
         </>
       );
-    case "heart":
+    case 'heart':
       return (
         <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8Z" />
       );
-    case "globe":
+    case 'globe':
       return (
         <>
           <circle cx="12" cy="12" r="9" />
@@ -122,7 +123,7 @@ function getPath(name: IconName) {
           <path d="M12 3a14.5 14.5 0 0 0 0 18" />
         </>
       );
-    case "language":
+    case 'language':
       return (
         <>
           <path d="M4 5h12" />
@@ -132,21 +133,21 @@ function getPath(name: IconName) {
           <path d="M15.5 15h5" />
         </>
       );
-    case "shield":
+    case 'shield':
       return (
         <>
           <path d="M12 3 5 6v6c0 5 3.5 8 7 9 3.5-1 7-4 7-9V6l-7-3Z" />
           <path d="m9.5 12 1.75 1.75L15 10" />
         </>
       );
-    case "spark":
+    case 'spark':
       return (
         <>
           <path d="m12 2 1.7 4.3L18 8l-4.3 1.7L12 14l-1.7-4.3L6 8l4.3-1.7Z" />
           <path d="m5 16 .8 2.2L8 19l-2.2.8L5 22l-.8-2.2L2 19l2.2-.8Z" />
         </>
       );
-    case "wallet":
+    case 'wallet':
       return (
         <>
           <path d="M3 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" />
@@ -154,18 +155,18 @@ function getPath(name: IconName) {
           <path d="M3 9h16" />
         </>
       );
-    case "arrow-up-right":
+    case 'arrow-up-right':
       return (
         <>
           <path d="M7 17 17 7" />
           <path d="M8 7h9v9" />
         </>
       );
-    case "chevron-down":
+    case 'chevron-down':
       return <path d="m6 9 6 6 6-6" />;
-    case "chevron-up":
+    case 'chevron-up':
       return <path d="m6 15 6-6 6 6" />;
-    case "help":
+    case 'help':
       return (
         <>
           <circle cx="12" cy="12" r="10" />
@@ -173,7 +174,7 @@ function getPath(name: IconName) {
           <path d="M12 17h.01" />
         </>
       );
-    case "refresh":
+    case 'refresh':
       return (
         <>
           <path d="M3 12a9 9 0 0 1 15-6.7L21 8" />
@@ -182,21 +183,29 @@ function getPath(name: IconName) {
           <path d="M3 21v-5h5" />
         </>
       );
-    case "plus":
+    case 'plus':
       return (
         <>
           <path d="M12 5v14" />
           <path d="M5 12h14" />
         </>
       );
-    case "close":
+    case 'menu':
+      return (
+        <>
+          <path d="M4 6h16" />
+          <path d="M4 12h16" />
+          <path d="M4 18h16" />
+        </>
+      );
+    case 'close':
       return (
         <>
           <path d="M18 6 6 18" />
           <path d="M6 6l12 12" />
         </>
       );
-    case "grid-3x3":
+    case 'grid-3x3':
       return (
         <>
           <rect width="7" height="7" x="3" y="3" rx="1" />
@@ -205,7 +214,7 @@ function getPath(name: IconName) {
           <rect width="7" height="7" x="14" y="14" rx="1" />
         </>
       );
-    case "list":
+    case 'list':
       return (
         <>
           <line x1="8" x2="21" y1="6" y2="6" />
@@ -216,16 +225,16 @@ function getPath(name: IconName) {
           <line x1="3" x2="3.01" y1="18" y2="18" />
         </>
       );
-    case "chevron-up-down":
+    case 'chevron-up-down':
       return (
         <>
           <path d="m7 15 5 5 5-5" />
           <path d="m7 9 5-5 5 5" />
         </>
       );
-    case "zap":
+    case 'zap':
       return <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z" />;
-    case "alert-triangle":
+    case 'alert-triangle':
       return (
         <>
           <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
@@ -233,9 +242,9 @@ function getPath(name: IconName) {
           <path d="M12 17h.01" />
         </>
       );
-    case "activity":
+    case 'activity':
       return <path d="M22 12h-4l-3 9L9 3l-3 9H2" />;
-    case "layers":
+    case 'layers':
       return (
         <>
           <path d="M12 2 2 7l10 5 10-5-10-5Z" />
@@ -243,28 +252,28 @@ function getPath(name: IconName) {
           <path d="m2 12 10 5 10-5" />
         </>
       );
-    case "trending-up":
+    case 'trending-up':
       return (
         <>
           <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
           <polyline points="17 6 23 6 23 12" />
         </>
       );
-    case "trending-down":
+    case 'trending-down':
       return (
         <>
           <polyline points="23 18 13.5 8.5 8.5 13.5 1 6" />
           <polyline points="17 18 23 18 23 12" />
         </>
       );
-    case "verify":
+    case 'verify':
       return (
         <>
           <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
           <path d="m9 12 2 2 4-4" />
         </>
       );
-    case "alert-circle":
+    case 'alert-circle':
       return (
         <>
           <circle cx="12" cy="12" r="10" />
@@ -272,14 +281,14 @@ function getPath(name: IconName) {
           <line x1="12" x2="12.01" y1="16" y2="16" />
         </>
       );
-    case "copy":
+    case 'copy':
       return (
         <>
           <rect x="9" y="9" width="13" height="13" rx="2" />
           <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
         </>
       );
-    case "upload":
+    case 'upload':
       return (
         <>
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
@@ -287,7 +296,7 @@ function getPath(name: IconName) {
           <line x1="12" y1="3" x2="12" y2="15" />
         </>
       );
-    case "trash":
+    case 'trash':
       return (
         <>
           <polyline points="3 6 5 6 21 6" />
@@ -297,16 +306,16 @@ function getPath(name: IconName) {
           <path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2" />
         </>
       );
-    case "edit":
+    case 'edit':
       return (
         <>
           <path d="M12 20h9" />
           <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
         </>
       );
-    case "chevron-right":
+    case 'chevron-right':
       return <path d="m9 18 6-6-6-6" />;
-    case "bell":
+    case 'bell':
       return (
         <>
           <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
@@ -318,15 +327,16 @@ function getPath(name: IconName) {
 
 export function Icon({
   name,
-  size = "md",
-  tone = "default",
+  size = 'md',
+  tone = 'default',
   label,
   className,
-  "aria-hidden": ariaHiddenProp,
+  'aria-hidden': ariaHiddenProp,
 }: IconProps) {
   const dimension = sizeMap[size];
   // Explicit aria-hidden prop takes precedence; fall back to hiding when no label
-  const ariaHidden = ariaHiddenProp !== undefined ? ariaHiddenProp : (label ? undefined : true);
+  const ariaHidden =
+    ariaHiddenProp !== undefined ? ariaHiddenProp : label ? undefined : true;
 
   return (
     <svg
@@ -335,7 +345,7 @@ export function Icon({
       className={className}
       fill="none"
       height={dimension}
-      role={label ? "img" : undefined}
+      role={label ? 'img' : undefined}
       stroke={toneMap[tone]}
       strokeLinecap="round"
       strokeLinejoin="round"
