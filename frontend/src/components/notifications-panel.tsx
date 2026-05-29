@@ -1,11 +1,18 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { Icon } from "@/components/icon";
+import React, {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type RefObject,
+} from 'react';
+import { Icon, type IconName } from '@/components/icon';
 
 export interface Notification {
   id: string;
-  type: "policy" | "claim" | "transaction";
+  type: 'policy' | 'claim' | 'transaction';
   title: string;
   message: string;
   timestamp: Date;
@@ -15,40 +22,50 @@ export interface Notification {
 interface NotificationsPanelProps {
   isOpen: boolean;
   onClose: () => void;
+  returnFocusRef?: RefObject<HTMLElement>;
 }
 
 const MOCK_NOTIFICATIONS: Notification[] = [
   {
-    id: "1",
-    type: "policy",
-    title: "Policy Updated",
-    message: "Your weather protection policy has been activated.",
+    id: '1',
+    type: 'policy',
+    title: 'Policy Updated',
+    message: 'Your weather protection policy has been activated.',
     timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
     read: false,
   },
   {
-    id: "2",
-    type: "claim",
-    title: "Claim Approved",
-    message: "Your claim POL-2024-00124 has been approved for payment.",
+    id: '2',
+    type: 'claim',
+    title: 'Claim Approved',
+    message: 'Your claim POL-2024-00124 has been approved for payment.',
     timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000),
     read: false,
   },
   {
-    id: "3",
-    type: "transaction",
-    title: "Premium Paid",
-    message: "Your premium payment of 1000 XLM has been confirmed.",
+    id: '3',
+    type: 'transaction',
+    title: 'Premium Paid',
+    message: 'Your premium payment of 1000 XLM has been confirmed.',
     timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
     read: true,
   },
 ];
 
-function getNotificationIcon(type: Notification["type"]): string {
-  const iconMap: Record<Notification["type"], string> = {
-    policy: "shield",
-    claim: "document",
-    transaction: "wallet",
+const FOCUSABLE_SELECTOR = [
+  'a[href]',
+  'button:not([disabled])',
+  'input:not([disabled])',
+  'select:not([disabled])',
+  'textarea:not([disabled])',
+  '[tabindex]:not([tabindex="-1"])',
+].join(',');
+
+function getNotificationIcon(type: Notification['type']): IconName {
+  const iconMap: Record<Notification['type'], IconName> = {
+    policy: 'shield',
+    claim: 'document',
+    transaction: 'wallet',
   };
   return iconMap[type];
 }
@@ -66,10 +83,40 @@ function formatTime(date: Date): string {
   return date.toLocaleDateString();
 }
 
-export function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps) {
-  const [notifications, setNotifications] = useState<Notification[]>(MOCK_NOTIFICATIONS);
+export function NotificationsPanel({
+  isOpen,
+  onClose,
+  returnFocusRef,
+}: NotificationsPanelProps) {
+  const [notifications, setNotifications] =
+    useState<Notification[]>(MOCK_NOTIFICATIONS);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const wasOpenRef = useRef(false);
+
+  const requestClose = useCallback(() => {
+    onClose();
+  }, [onClose]);
+
+  useEffect(() => {
+    if (isOpen) {
+      wasOpenRef.current = true;
+      return;
+    }
+
+    if (wasOpenRef.current) {
+      wasOpenRef.current = false;
+      returnFocusRef?.current?.focus();
+    }
+  }, [isOpen, returnFocusRef]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    closeButtonRef.current?.focus();
+  }, [isOpen]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -81,7 +128,7 @@ export function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps)
         await new Promise((resolve) => setTimeout(resolve, 500));
         setNotifications(MOCK_NOTIFICATIONS);
       } catch (err) {
-        setError("Failed to load notifications. Please try again.");
+        setError('Failed to load notifications. Please try again.');
       } finally {
         setLoading(false);
       }
@@ -89,6 +136,37 @@ export function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps)
 
     loadNotifications();
   }, [isOpen]);
+
+  function handlePanelKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      requestClose();
+      return;
+    }
+
+    if (event.key !== 'Tab') return;
+
+    const focusableElements = Array.from(
+      panelRef.current?.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR) ?? []
+    ).filter((element) => !element.hasAttribute('disabled'));
+
+    if (focusableElements.length === 0) {
+      event.preventDefault();
+      panelRef.current?.focus();
+      return;
+    }
+
+    const firstFocusable = focusableElements[0];
+    const lastFocusable = focusableElements[focusableElements.length - 1];
+
+    if (event.shiftKey && document.activeElement === firstFocusable) {
+      event.preventDefault();
+      lastFocusable.focus();
+    } else if (!event.shiftKey && document.activeElement === lastFocusable) {
+      event.preventDefault();
+      firstFocusable.focus();
+    }
+  }
 
   function markAsRead(id: string) {
     setNotifications((prev) =>
@@ -106,13 +184,25 @@ export function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps)
 
   return (
     <>
-      <div className="notifications-panel-overlay" onClick={onClose} />
-      <div className="notifications-panel" role="region" aria-label="Notifications">
+      <div className="notifications-panel-overlay" onClick={requestClose} />
+      <div
+        ref={panelRef}
+        className="notifications-panel"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="notifications-panel-title"
+        onKeyDown={handlePanelKeyDown}
+        tabIndex={-1}
+      >
         <div className="notifications-header">
-          <h2 className="notifications-title">Notifications</h2>
+          <h2 id="notifications-panel-title" className="notifications-title">
+            Notifications
+          </h2>
           <button
+            ref={closeButtonRef}
+            type="button"
             className="notifications-close"
-            onClick={onClose}
+            onClick={requestClose}
             aria-label="Close notifications panel"
           >
             <Icon name="close" size="md" tone="muted" />
@@ -143,39 +233,53 @@ export function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps)
           <>
             {unreadCount > 0 && (
               <div className="notifications-badge">
-                {unreadCount} new {unreadCount === 1 ? "notification" : "notifications"}
+                {unreadCount} new{' '}
+                {unreadCount === 1 ? 'notification' : 'notifications'}
               </div>
             )}
 
             <div className="notifications-list">
               {notifications.map((notification) => (
-                <div
+                <button
                   key={notification.id}
-                  className={`notification-item ${notification.read ? "read" : "unread"}`}
+                  type="button"
+                  className={`notification-item ${notification.read ? 'read' : 'unread'}`}
                   onClick={() => markAsRead(notification.id)}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => e.key === "Enter" && markAsRead(notification.id)}
                 >
-                  <div className="notification-icon">
+                  <span className="notification-icon">
                     <Icon
                       name={getNotificationIcon(notification.type)}
                       size="md"
                       tone="accent"
                     />
-                  </div>
-                  <div className="notification-content">
-                    <h3 className="notification-title">{notification.title}</h3>
-                    <p className="notification-message">{notification.message}</p>
-                    <span className="notification-time">{formatTime(notification.timestamp)}</span>
-                  </div>
-                  {!notification.read && <div className="notification-unread-indicator" />}
-                </div>
+                  </span>
+                  <span className="notification-content">
+                    <span className="notification-title">
+                      {notification.title}
+                    </span>
+                    <span className="notification-message">
+                      {notification.message}
+                    </span>
+                    <time
+                      className="notification-time"
+                      dateTime={notification.timestamp.toISOString()}
+                    >
+                      {formatTime(notification.timestamp)}
+                    </time>
+                  </span>
+                  {!notification.read && (
+                    <span className="notification-unread-indicator" />
+                  )}
+                </button>
               ))}
             </div>
 
             <div className="notifications-footer">
-              <button className="notifications-btn" onClick={clearAll}>
+              <button
+                type="button"
+                className="notifications-btn"
+                onClick={clearAll}
+              >
                 Clear All
               </button>
             </div>
