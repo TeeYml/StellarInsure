@@ -9,19 +9,41 @@ interface SettingsSection {
   label: string;
 }
 
+const INITIAL_SETTINGS = {
+  timezone: "UTC",
+  currency: "XLM",
+  language: "en",
+  email: true,
+  sms: false,
+  pushNotifications: true,
+  twoFactorEnabled: true,
+  dataSharing: false,
+};
+
 export default function SettingsPageClient() {
   const [activeTab, setActiveTab] = useState<SettingsSection["name"]>("account");
-  const [timezone, setTimezone] = useState("UTC");
-  const [currency, setCurrency] = useState("XLM");
-  const [language, setLanguage] = useState("en");
-  const [email, setEmail] = useState(true);
-  const [sms, setSms] = useState(false);
-  const [pushNotifications, setPushNotifications] = useState(true);
-  const [twoFactorEnabled, setTwoFactorEnabled] = useState(true);
-  const [dataSharing, setDataSharing] = useState(false);
+  const [timezone, setTimezone] = useState(INITIAL_SETTINGS.timezone);
+  const [currency, setCurrency] = useState(INITIAL_SETTINGS.currency);
+  const [language, setLanguage] = useState(INITIAL_SETTINGS.language);
+  const [email, setEmail] = useState(INITIAL_SETTINGS.email);
+  const [sms, setSms] = useState(INITIAL_SETTINGS.sms);
+  const [pushNotifications, setPushNotifications] = useState(INITIAL_SETTINGS.pushNotifications);
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState(INITIAL_SETTINGS.twoFactorEnabled);
+  const [dataSharing, setDataSharing] = useState(INITIAL_SETTINGS.dataSharing);
+  const [savedSettings, setSavedSettings] = useState(INITIAL_SETTINGS);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
+
+  const isDirty =
+    timezone !== savedSettings.timezone ||
+    currency !== savedSettings.currency ||
+    language !== savedSettings.language ||
+    email !== savedSettings.email ||
+    sms !== savedSettings.sms ||
+    pushNotifications !== savedSettings.pushNotifications ||
+    twoFactorEnabled !== savedSettings.twoFactorEnabled ||
+    dataSharing !== savedSettings.dataSharing;
 
   const sections: SettingsSection[] = [
     { name: "account", label: "Account" },
@@ -37,6 +59,7 @@ export default function SettingsPageClient() {
     setError("");
     try {
       await new Promise((resolve) => setTimeout(resolve, 500));
+      setSavedSettings({ timezone, currency, language, email, sms, pushNotifications, twoFactorEnabled, dataSharing });
       setStatus("Settings saved successfully.");
     } catch (err) {
       setError("Failed to save settings. Please try again.");
@@ -59,8 +82,10 @@ export default function SettingsPageClient() {
           {sections.map((section) => (
             <button
               key={section.name}
+              id={`tab-${section.name}`}
               role="tab"
               aria-selected={activeTab === section.name}
+              aria-controls={`panel-${section.name}`}
               className={`settings-tab ${activeTab === section.name ? "active" : ""}`}
               onClick={() => setActiveTab(section.name)}
             >
@@ -73,7 +98,7 @@ export default function SettingsPageClient() {
         <form className="settings-panel" onSubmit={handleSave} aria-label="Settings form">
           {/* Account Settings */}
           {activeTab === "account" && (
-            <div className="settings-section" role="tabpanel">
+            <div id="panel-account" className="settings-section" role="tabpanel" aria-labelledby="tab-account">
               <h2 className="settings-section-title">Account Information</h2>
 
               <label className="field">
@@ -121,7 +146,7 @@ export default function SettingsPageClient() {
 
           {/* Preferences */}
           {activeTab === "preferences" && (
-            <div className="settings-section" role="tabpanel">
+            <div id="panel-preferences" className="settings-section" role="tabpanel" aria-labelledby="tab-preferences">
               <h2 className="settings-section-title">Notification Preferences</h2>
 
               <fieldset className="fieldset">
@@ -168,7 +193,7 @@ export default function SettingsPageClient() {
 
           {/* Security */}
           {activeTab === "security" && (
-            <div className="settings-section" role="tabpanel">
+            <div id="panel-security" className="settings-section" role="tabpanel" aria-labelledby="tab-security">
               <h2 className="settings-section-title">Security Controls</h2>
 
               <fieldset className="fieldset">
@@ -214,7 +239,7 @@ export default function SettingsPageClient() {
           {/* Action Buttons */}
           {activeTab !== "address-book" && (
             <div className="form-actions">
-              <button className="cta-primary" type="submit" disabled={loading}>
+              <button className="cta-primary" type="submit" disabled={loading || !isDirty}>
                 {loading ? "Saving..." : "Save Changes"}
               </button>
             </div>
@@ -222,7 +247,7 @@ export default function SettingsPageClient() {
         </form>
 
         {activeTab === "address-book" && (
-          <div className="settings-panel" role="tabpanel">
+          <div id="panel-address-book" className="settings-panel" role="tabpanel" aria-labelledby="tab-address-book">
             <AddressBook />
           </div>
         )}

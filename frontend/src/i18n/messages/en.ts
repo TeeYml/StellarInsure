@@ -137,6 +137,10 @@ const en = {
     submitSection: {
       title: 'Submitting Your Policy',
       desc: 'Follow the progress of your on-chain transaction below.',
+      failedTitle: 'Submission Failed',
+      failedDesc: 'The transaction could not be signed or submitted. You can retry the submission or go back to review your policy details before trying again.',
+      retryAction: 'Retry Submission',
+      backToReview: 'Back to Review',
     },
     receipt: {
       title: 'Policy Created Successfully',

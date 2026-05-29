@@ -336,6 +336,7 @@ export default function CreatePolicyPageClient() {
   const [isEstimating, setIsEstimating] = useState(false);
   const [estimationError, setEstimationError] = useState(false);
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
+  const [submissionFailed, setSubmissionFailed] = useState(false);
   const { isConnected, message: walletMessage, status: walletStatus, connect } = useWallet();
 
   function updateDraft<K extends keyof PolicyDraft>(field: K, value: PolicyDraft[K]) {
@@ -437,6 +438,7 @@ export default function CreatePolicyPageClient() {
 
     setStep(3);
     setReceipt(null);
+    setSubmissionFailed(false);
 
     const updatedSteps = [...DEFAULT_TX_STEPS];
     updatedSteps[0] = { ...updatedSteps[0], status: "active" };
@@ -477,6 +479,7 @@ export default function CreatePolicyPageClient() {
       const errorSteps = [...updatedSteps];
       errorSteps[0] = { ...errorSteps[0], status: "failed" };
       setTxSteps(errorSteps);
+      setSubmissionFailed(true);
       logError(error instanceof Error ? error : new Error(String(error)), {
         tags: { component: "CreatePolicyPageClient", action: "simulateSubmit" }
       });
@@ -805,6 +808,40 @@ export default function CreatePolicyPageClient() {
           <div className="panel">
             <TransactionTimeline steps={txSteps} />
           </div>
+
+          {submissionFailed && (
+            <div className="state-card motion-panel" role="alert" aria-live="assertive">
+              <span className="state-icon" aria-hidden="true">
+                <Icon name="alert-circle" size="lg" tone="danger" />
+              </span>
+              <h3>{t("createPolicy.submitSection.failedTitle")}</h3>
+              <p className="state-copy">{t("createPolicy.submitSection.failedDesc")}</p>
+              <div className="inline-actions">
+                <button
+                  className="cta-primary"
+                  type="button"
+                  onClick={() => {
+                    setTxSteps(DEFAULT_TX_STEPS);
+                    simulateSubmit();
+                  }}
+                >
+                  <Icon name="refresh-cw" size="sm" aria-hidden="true" />
+                  {t("createPolicy.submitSection.retryAction")}
+                </button>
+                <button
+                  className="cta-secondary"
+                  type="button"
+                  onClick={() => {
+                    setSubmissionFailed(false);
+                    setTxSteps(DEFAULT_TX_STEPS);
+                    setStep(2);
+                  }}
+                >
+                  {t("createPolicy.submitSection.backToReview")}
+                </button>
+              </div>
+            </div>
+          )}
 
           {txSteps.every((timelineStep) => timelineStep.status === "completed") && receipt ? (
             <SuccessReceipt
