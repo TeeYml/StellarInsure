@@ -8,6 +8,7 @@ import logging
 from typing import Optional, List
 from fastapi import UploadFile, HTTPException, status
 from ..config import get_settings
+from ..errors import InvalidFileTypeError, FileTooLargeError
 
 settings = get_settings()
 logger = logging.getLogger(__name__)
@@ -28,15 +29,13 @@ class StorageService:
         # Validate extension
         ext = os.path.splitext(file.filename)[1].lower() if file.filename else ""
         if ext not in self.allowed_extensions:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
+            raise InvalidFileTypeError(
                 detail=f"File extension {ext} not allowed. Allowed: {', '.join(self.allowed_extensions)}"
             )
 
         # Validate content type
         if file.content_type not in self.allowed_content_types:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
+            raise InvalidFileTypeError(
                 detail=f"Content type {file.content_type} not allowed. Allowed: {', '.join(self.allowed_content_types)}"
             )
 
@@ -46,8 +45,7 @@ class StorageService:
         # Read content to check size
         content = await file.read()
         if len(content) > self.max_size:
-            raise HTTPException(
-                status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            raise FileTooLargeError(
                 detail=f"File size exceeds limit of {self.max_size / (1024 * 1024):.1f}MB"
             )
 

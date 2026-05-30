@@ -106,16 +106,13 @@ const MOCK_POLICIES: Policy[] = [
   },
 ];
 
-const POLICY_TYPE_DISPLAY: Record<
-  PolicyType,
-  { label: string; icon: IconName }
-> = {
-  weather: { label: 'Weather', icon: 'shield' },
-  flight: { label: 'Flight Delay', icon: 'clock' },
-  'smart-contract': { label: 'Smart Contract', icon: 'spark' },
-  asset: { label: 'Asset Protection', icon: 'wallet' },
-  health: { label: 'Health', icon: 'heart' },
-  all: { label: 'All Types', icon: 'shield' },
+const POLICY_TYPE_ICONS: Record<PolicyType, IconName> = {
+  weather: 'shield',
+  flight: 'clock',
+  'smart-contract': 'spark',
+  asset: 'wallet',
+  health: 'heart',
+  all: 'shield',
 };
 
 function formatDate(dateStr: string): string {
@@ -133,18 +130,20 @@ function formatCurrency(amount: number): string {
 function PolicyCardContent({
   policy,
   optimisticStatus,
+  t,
 }: {
   policy: Policy;
   optimisticStatus: 'confirmed' | 'pending' | 'error';
+  t: (key: string, opts?: Record<string, string | number>) => string;
 }) {
-  const typeDisplay = POLICY_TYPE_DISPLAY[policy.type as PolicyType];
+  const typeIcon = POLICY_TYPE_ICONS[policy.type as PolicyType];
 
   return (
     <article className="policy-card__inner">
       {optimisticStatus === 'pending' && (
         <div className="policy-card__optimistic-badge" aria-live="polite">
           <Icon name="clock" size="sm" tone="warning" aria-hidden="true" />
-          <span>Saving…</span>
+          <span>{t('policies.card.saving')}</span>
         </div>
       )}
       {optimisticStatus === 'error' && (
@@ -153,7 +152,7 @@ function PolicyCardContent({
           aria-live="polite"
         >
           <Icon name="alert" size="sm" tone="danger" aria-hidden="true" />
-          <span>Failed to save</span>
+          <span>{t('policies.card.failedToSave')}</span>
         </div>
       )}
       <div className="policy-card__header">
@@ -162,19 +161,19 @@ function PolicyCardContent({
           <StatusPill status={policy.status as any} />
         </div>
         <div className="policy-card__icon">
-          <Icon name={typeDisplay.icon} size="md" tone="accent" />
+          <Icon name={typeIcon} size="md" tone="accent" />
         </div>
       </div>
 
       <div className="policy-card__details">
         <div className="policy-card__detail-row">
-          <span className="policy-card__label">Coverage</span>
+          <span className="policy-card__label">{t('policies.card.coverage')}</span>
           <span className="policy-card__value">
             {formatCurrency(policy.coverageAmount)}
           </span>
         </div>
         <div className="policy-card__detail-row">
-          <span className="policy-card__label">Premium</span>
+          <span className="policy-card__label">{t('policies.card.premium')}</span>
           <span className="policy-card__value">
             {formatCurrency(policy.premiumAmount)}
           </span>
@@ -184,8 +183,8 @@ function PolicyCardContent({
       <div className="policy-card__footer">
         <div className="policy-card__meta">
           <span className="policy-card__type-badge">
-            <Icon name={typeDisplay.icon} size="sm" tone="muted" />
-            {typeDisplay.label}
+            <Icon name={typeIcon} size="sm" tone="muted" />
+            {t(`policies.typeLabels.${policy.type}`)}
           </span>
           <span className="policy-card__date">
             {formatDate(policy.createdAt)}
@@ -205,10 +204,12 @@ function PolicyCard({
   policy,
   optimisticStatus = 'confirmed',
   onDismissError,
+  t,
 }: {
   policy: Policy;
   optimisticStatus?: 'confirmed' | 'pending' | 'error';
   onDismissError?: () => void;
+  t: (key: string, opts?: Record<string, string | number>) => string;
 }) {
   const isPending = optimisticStatus === 'pending';
   const cardClassName = `policy-card motion-panel${isPending ? ' policy-card--optimistic' : ''}${optimisticStatus === 'error' ? ' policy-card--error' : ''}`;
@@ -226,6 +227,7 @@ function PolicyCard({
           <PolicyCardContent
             policy={policy}
             optimisticStatus={optimisticStatus}
+            t={t}
           />
         </div>
       ) : (
@@ -237,6 +239,7 @@ function PolicyCard({
           <PolicyCardContent
             policy={policy}
             optimisticStatus={optimisticStatus}
+            t={t}
           />
         </Link>
       )}
@@ -248,7 +251,7 @@ function PolicyCard({
             e.preventDefault();
             onDismissError();
           }}
-          aria-label={`Dismiss error for ${policy.title}`}
+          aria-label={t('policies.card.dismissError', { title: policy.title })}
         >
           <Icon name="close" size="sm" tone="danger" />
         </button>
@@ -411,34 +414,31 @@ export default function PoliciesListPageClient() {
     <div className="policies-page">
       <section className="policies-hero motion-panel">
         <div>
-          <p className="eyebrow">Policy portfolio</p>
+          <p className="eyebrow">{t('policies.hero.eyebrow')}</p>
           <h1>{t('policies.title')}</h1>
-          <p>
-            Track live coverage, pending policy creations, and historical
-            payouts from one responsive workspace.
-          </p>
+          <p>{t('policies.hero.description')}</p>
         </div>
         <div className="policies-hero__actions">
           <button className="btn btn-primary" onClick={handleSimulateOptimistic}>
-            Simulate pending policy
+            {t('policies.simulate.pending')}
           </button>
           <button className="btn btn-secondary" onClick={handleSimulateError}>
-            Simulate error state
+            {t('policies.simulate.error')}
           </button>
         </div>
       </section>
 
       <section className="policies-summary-grid">
         <div className="summary-card motion-panel">
-          <span>Total coverage</span>
+          <span>{t('policies.summary.totalCoverage')}</span>
           <strong>{formatCurrency(totalCoverage)}</strong>
         </div>
         <div className="summary-card motion-panel">
-          <span>Active policies</span>
+          <span>{t('policies.summary.activePolicies')}</span>
           <strong>{activeCount}</strong>
         </div>
         <div className="summary-card motion-panel">
-          <span>Pending changes</span>
+          <span>{t('policies.summary.pendingChanges')}</span>
           <strong>{pendingCount}</strong>
         </div>
       </section>
@@ -449,13 +449,13 @@ export default function PoliciesListPageClient() {
           <input
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.target.value)}
-            placeholder="Search policies or oracle sources"
-            aria-label="Search policies"
+            placeholder={t('policies.filters.searchPlaceholder')}
+            aria-label={t('policies.filters.searchAriaLabel')}
           />
         </div>
 
         <label>
-          Status
+          {t('policies.filters.status')}
           <select
             value={statusFilter}
             onChange={(event) =>
@@ -464,41 +464,41 @@ export default function PoliciesListPageClient() {
               )
             }
           >
-            <option value="all">All</option>
-            <option value="active">Active</option>
-            <option value="pending">Pending</option>
-            <option value="expired">Expired</option>
-            <option value="claimed">Claimed</option>
+            <option value="all">{t('policies.filters.statusOptions.all')}</option>
+            <option value="active">{t('policies.filters.statusOptions.active')}</option>
+            <option value="pending">{t('policies.filters.statusOptions.pending')}</option>
+            <option value="expired">{t('policies.filters.statusOptions.expired')}</option>
+            <option value="claimed">{t('policies.filters.statusOptions.claimed')}</option>
           </select>
         </label>
 
         <label>
-          Type
+          {t('policies.filters.type')}
           <select
             value={typeFilter}
             onChange={(event) =>
               handleFilterChange(() => setTypeFilter(event.target.value as PolicyType))
             }
           >
-            <option value="all">All</option>
-            <option value="weather">Weather</option>
-            <option value="flight">Flight</option>
-            <option value="smart-contract">Smart contract</option>
-            <option value="asset">Asset</option>
-            <option value="health">Health</option>
+            <option value="all">{t('policies.filters.typeOptions.all')}</option>
+            <option value="weather">{t('policies.filters.typeOptions.weather')}</option>
+            <option value="flight">{t('policies.filters.typeOptions.flight')}</option>
+            <option value="smart-contract">{t('policies.filters.typeOptions.smart-contract')}</option>
+            <option value="asset">{t('policies.filters.typeOptions.asset')}</option>
+            <option value="health">{t('policies.filters.typeOptions.health')}</option>
           </select>
         </label>
 
         <label>
-          Sort
+          {t('policies.filters.sortLabel')}
           <select
             value={sortBy}
             onChange={(event) =>
               handleFilterChange(() => setSortBy(event.target.value as SortBy))
             }
           >
-            <option value="date">Newest</option>
-            <option value="coverage">Coverage</option>
+            <option value="date">{t('policies.filters.sortOptions.date')}</option>
+            <option value="coverage">{t('policies.filters.sortOptions.coverage')}</option>
           </select>
         </label>
 
@@ -507,7 +507,7 @@ export default function PoliciesListPageClient() {
             live region below, and *not* silently applied (the effective
             range is swapped so results don't collapse to zero). */}
         <label>
-          Min coverage
+          {t('policies.filters.minCoverageLabel')}
           <input
             type="number"
             min={0}
@@ -522,7 +522,7 @@ export default function PoliciesListPageClient() {
           />
         </label>
         <label>
-          Max coverage
+          {t('policies.filters.maxCoverageLabel')}
           <input
             type="number"
             min={0}
@@ -543,22 +543,25 @@ export default function PoliciesListPageClient() {
           aria-live="polite"
         >
           {minCoverage > maxCoverage
-            ? `Minimum coverage (${minCoverage.toLocaleString()}) is greater than maximum (${maxCoverage.toLocaleString()}). Values were swapped automatically; results show the full range you intended.`
+            ? t('policies.filters.coverageWarning', {
+                min: minCoverage.toLocaleString(),
+                max: maxCoverage.toLocaleString(),
+              })
             : ''}
         </p>
 
-        <div className="view-toggle" role="group" aria-label="View mode">
+        <div className="view-toggle" role="group" aria-label={t('policies.filters.viewMode')}>
           <button
             className={viewMode === 'grid' ? 'is-active' : ''}
             onClick={() => setViewMode('grid')}
           >
-            Grid
+            {t('policies.filters.grid')}
           </button>
           <button
             className={viewMode === 'list' ? 'is-active' : ''}
             onClick={() => setViewMode('list')}
           >
-            List
+            {t('policies.filters.list')}
           </button>
         </div>
       </section>
@@ -577,6 +580,7 @@ export default function PoliciesListPageClient() {
               policy={item.item}
               optimisticStatus={item.optimisticStatus}
               onDismissError={() => dismissError(item.item.id)}
+              t={t}
             />
           ))}
         </div>

@@ -19,7 +19,7 @@ import {
 import { useWallet } from "@/components/wallet-provider";
 import { useAutosave } from "@/hooks/use-autosave";
 import { useAppTranslation } from "@/i18n/provider";
-import { TriggerConditionBuilder } from "@/components/trigger-condition-builder";
+import { TriggerConditionBuilder, type ConditionRule, type Operator } from "@/components/trigger-condition-builder";
 import { PremiumEstimate, type PremiumBreakdown } from "@/components/premium-estimate";
 import { ValidationSummary, type ValidationError } from "@/components/validation-summary";
 import { signTransaction } from "@stellar/freighter-api";
@@ -57,6 +57,22 @@ const INITIAL_DRAFT: PolicyDraft = {
 };
 
 
+
+function parseConditionString(condition: string): ConditionRule[] | undefined {
+  if (!condition || condition.trim() === "") return undefined;
+  const parts = condition.split(" AND ").map((p) => p.trim()).filter(Boolean);
+  if (parts.length === 0) return undefined;
+  const rules: ConditionRule[] = [];
+  const pattern = /^(\w+)\s*(>=|<=|>|<|=)\s*(.+)$/;
+  for (const part of parts) {
+    const match = part.match(pattern);
+    if (!match) return undefined;
+    const operator = match[2] as Operator;
+    if (![">", "<", "=", ">=", "<="].includes(operator)) return undefined;
+    rules.push({ field: match[1], operator, value: match[3].trim() });
+  }
+  return rules.length > 0 ? rules : undefined;
+}
 
 const MAX_COVERAGE_AMOUNT = 1_000_000;
 
@@ -523,6 +539,11 @@ export default function CreatePolicyPageClient() {
     oracleState === "ready" &&
     draft.oracleProvider.trim() !== "";
 
+  const triggerInitialRules = useMemo(
+    () => parseConditionString(draft.triggerCondition),
+    [draft.triggerCondition],
+  );
+
   const isWalletReady = isConnected && walletStatus !== "checking" && walletStatus !== "connecting";
 
   return (
@@ -624,6 +645,7 @@ export default function CreatePolicyPageClient() {
             <div className="field field--full" id="trigger-input">
               <span className="field__label">{t("createPolicy.configSection.triggerLabel")}</span>
               <TriggerConditionBuilder
+                initialRules={triggerInitialRules}
                 onChange={(val) => updateDraft("triggerCondition", val)}
               />
               <span className="field__hint">

@@ -3,11 +3,7 @@
 import { useState } from "react";
 
 import { AddressBook } from "@/components/address-book";
-
-interface SettingsSection {
-  name: "account" | "preferences" | "security" | "address-book";
-  label: string;
-}
+import { useAppTranslation } from "@/i18n/provider";
 
 const INITIAL_SETTINGS = {
   timezone: "UTC",
@@ -21,7 +17,8 @@ const INITIAL_SETTINGS = {
 };
 
 export default function SettingsPageClient() {
-  const [activeTab, setActiveTab] = useState<SettingsSection["name"]>("account");
+  const { t } = useAppTranslation();
+  const [activeTab, setActiveTab] = useState<"account" | "preferences" | "security" | "address-book">("account");
   const [timezone, setTimezone] = useState(INITIAL_SETTINGS.timezone);
   const [currency, setCurrency] = useState(INITIAL_SETTINGS.currency);
   const [language, setLanguage] = useState(INITIAL_SETTINGS.language);
@@ -35,11 +32,11 @@ export default function SettingsPageClient() {
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
 
-  const sections: SettingsSection[] = [
-    { name: "account", label: "Account" },
-    { name: "preferences", label: "Preferences" },
-    { name: "security", label: "Security" },
-    { name: "address-book", label: "Address Book" },
+  const sections: { name: "account" | "preferences" | "security" | "address-book"; labelKey: string }[] = [
+    { name: "account", labelKey: "settings.tabs.account" },
+    { name: "preferences", labelKey: "settings.tabs.preferences" },
+    { name: "security", labelKey: "settings.tabs.security" },
+    { name: "address-book", labelKey: "settings.tabs.addressBook" },
   ];
 
   function handleTabKeyDown(event: React.KeyboardEvent<HTMLButtonElement>, index: number) {
@@ -73,9 +70,9 @@ export default function SettingsPageClient() {
     try {
       await new Promise((resolve) => setTimeout(resolve, 500));
       setSavedSettings({ timezone, currency, language, email, sms, pushNotifications, twoFactorEnabled, dataSharing });
-      setStatus("Settings saved successfully.");
-    } catch (err) {
-      setError("Failed to save settings. Please try again.");
+      setStatus(t("settings.form.saveSuccess"));
+    } catch {
+      setError(t("settings.form.saveError"));
     } finally {
       setLoading(false);
     }
@@ -84,9 +81,9 @@ export default function SettingsPageClient() {
   return (
     <main id="main-content" tabIndex={-1} className="policy-page">
       <div className="section-header">
-        <span className="eyebrow">Settings</span>
-        <h1>Account Settings</h1>
-        <p>Manage your account, preferences, and security settings.</p>
+        <span className="eyebrow">{t("settings.eyebrow")}</span>
+        <h1>{t("settings.title")}</h1>
+        <p>{t("settings.description")}</p>
       </div>
 
       <div className="settings-container">
@@ -103,20 +100,20 @@ export default function SettingsPageClient() {
               onClick={() => setActiveTab(section.name)}
               onKeyDown={(e) => handleTabKeyDown(e, index)}
             >
-              {section.label}
+              {t(section.labelKey)}
             </button>
           ))}
         </div>
 
         {/* Tab Content */}
-        <form className="settings-panel" onSubmit={handleSave} aria-label="Settings form">
+        <form className="settings-panel" onSubmit={handleSave} aria-label={t("settings.form.ariaLabel")}>
           {/* Account Settings */}
           {activeTab === "account" && (
             <div id="panel-account" className="settings-section" role="tabpanel" aria-labelledby="tab-account">
-              <h2 className="settings-section-title">Account Information</h2>
+              <h2 className="settings-section-title">{t("settings.account.title")}</h2>
 
               <label className="field">
-                <span className="field__label">Timezone</span>
+                <span className="field__label">{t("settings.account.timezone")}</span>
                 <select
                   className="tx-select"
                   value={timezone}
@@ -130,7 +127,7 @@ export default function SettingsPageClient() {
               </label>
 
               <label className="field">
-                <span className="field__label">Display Currency</span>
+                <span className="field__label">{t("settings.account.displayCurrency")}</span>
                 <select
                   className="tx-select"
                   value={currency}
@@ -143,7 +140,7 @@ export default function SettingsPageClient() {
               </label>
 
               <label className="field">
-                <span className="field__label">Language</span>
+                <span className="field__label">{t("settings.account.language")}</span>
                 <select
                   className="tx-select"
                   value={language}
@@ -161,17 +158,17 @@ export default function SettingsPageClient() {
           {/* Preferences */}
           {activeTab === "preferences" && (
             <div id="panel-preferences" className="settings-section" role="tabpanel" aria-labelledby="tab-preferences">
-              <h2 className="settings-section-title">Notification Preferences</h2>
+              <h2 className="settings-section-title">{t("settings.preferences.title")}</h2>
 
               <fieldset className="fieldset">
-                <legend className="field__label">Communication Channels</legend>
+                <legend className="field__label">{t("settings.preferences.communicationChannels")}</legend>
                 <label className="choice">
                   <input
                     type="checkbox"
                     checked={email}
                     onChange={(e) => setEmail(e.target.checked)}
                   />
-                  Email notifications about policy updates and claims
+                  {t("settings.preferences.email")}
                 </label>
                 <label className="choice">
                   <input
@@ -179,7 +176,7 @@ export default function SettingsPageClient() {
                     checked={sms}
                     onChange={(e) => setSms(e.target.checked)}
                   />
-                  SMS alerts for urgent policy changes
+                  {t("settings.preferences.sms")}
                 </label>
                 <label className="choice">
                   <input
@@ -187,19 +184,19 @@ export default function SettingsPageClient() {
                     checked={pushNotifications}
                     onChange={(e) => setPushNotifications(e.target.checked)}
                   />
-                  Push notifications for claim status updates
+                  {t("settings.preferences.push")}
                 </label>
               </fieldset>
 
               <fieldset className="fieldset">
-                <legend className="field__label">Data & Analytics</legend>
+                <legend className="field__label">{t("settings.preferences.dataAnalytics")}</legend>
                 <label className="choice">
                   <input
                     type="checkbox"
                     checked={dataSharing}
                     onChange={(e) => setDataSharing(e.target.checked)}
                   />
-                  Allow anonymous usage analytics to improve the platform
+                  {t("settings.preferences.dataSharing")}
                 </label>
               </fieldset>
             </div>
@@ -208,31 +205,31 @@ export default function SettingsPageClient() {
           {/* Security */}
           {activeTab === "security" && (
             <div id="panel-security" className="settings-section" role="tabpanel" aria-labelledby="tab-security">
-              <h2 className="settings-section-title">Security Controls</h2>
+              <h2 className="settings-section-title">{t("settings.security.title")}</h2>
 
               <fieldset className="fieldset">
-                <legend className="field__label">Authentication</legend>
+                <legend className="field__label">{t("settings.security.authentication")}</legend>
                 <label className="choice">
                   <input
                     type="checkbox"
                     checked={twoFactorEnabled}
                     onChange={(e) => setTwoFactorEnabled(e.target.checked)}
                   />
-                  Two-factor authentication (2FA) enabled
+                  {t("settings.security.twoFactor")}
                 </label>
               </fieldset>
 
               <div className="settings-subsection">
-                <h3 className="settings-subsection-title">Connected Wallets</h3>
+                <h3 className="settings-subsection-title">{t("settings.security.connectedWallets")}</h3>
                 <p className="settings-subsection-text">
-                  Your Stellar wallet connection is verified and secure.
+                  {t("settings.security.connectedWalletsText")}
                 </p>
               </div>
 
               <div className="settings-subsection">
-                <h3 className="settings-subsection-title">Session Management</h3>
+                <h3 className="settings-subsection-title">{t("settings.security.sessionManagement")}</h3>
                 <button type="button" className="cta-secondary">
-                  Sign Out from All Devices
+                  {t("settings.security.signOutAll")}
                 </button>
               </div>
             </div>
@@ -254,7 +251,7 @@ export default function SettingsPageClient() {
           {activeTab !== "address-book" && (
             <div className="form-actions">
               <button className="cta-primary" type="submit" disabled={loading || !isDirty}>
-                {loading ? "Saving..." : "Save Changes"}
+                {loading ? t("settings.form.saving") : t("settings.form.saveChanges")}
               </button>
             </div>
           )}

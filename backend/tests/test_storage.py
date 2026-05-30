@@ -5,8 +5,8 @@ import base64
 from io import BytesIO
 from fastapi import UploadFile, HTTPException
 from fastapi.testclient import TestClient
+from src.errors import InvalidFileTypeError, FileTooLargeError
 from src.services.storage_service import StorageService
-from src.main import app
 
 class TestStorageService:
     @pytest.fixture
@@ -45,18 +45,20 @@ class TestStorageService:
         content = b"test content"
         file = UploadFile(filename="test.exe", file=BytesIO(content), headers={"content-type": "application/x-msdownload"})
         
-        with pytest.raises(HTTPException) as exc:
+        with pytest.raises(InvalidFileTypeError) as exc:
             await storage_service.upload_file(file)
         assert exc.value.status_code == 400
+        assert exc.value.error_code == "STORAGE_004"
 
     @pytest.mark.asyncio
     async def test_upload_too_large(self, storage_service):
         content = b"a" * 2000  # 2KB > 1KB limit
         file = UploadFile(filename="large.png", file=BytesIO(content), headers={"content-type": "image/png"})
         
-        with pytest.raises(HTTPException) as exc:
+        with pytest.raises(FileTooLargeError) as exc:
             await storage_service.upload_file(file)
         assert exc.value.status_code == 413
+        assert exc.value.error_code == "STORAGE_003"
 
     def test_secure_url_generation_and_validation(self, storage_service):
         file_path = "test/file.png"
@@ -100,6 +102,7 @@ class TestStorageService:
 
 class TestStorageIntegration:
     def test_storage_route_access(self):
+        from src.main import app
         client = TestClient(app)
         # Unauthorized access or invalid token should return 403
         response = client.get("/storage/files/invalid-token")

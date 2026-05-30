@@ -18,9 +18,20 @@ vi.mock("@stellar/freighter-api", () => ({
 }));
 
 vi.mock("@/components/trigger-condition-builder", () => ({
-  TriggerConditionBuilder: ({ onChange }: { onChange: (value: string) => void }) => (
+  TriggerConditionBuilder: ({
+    initialRules,
+    onChange,
+  }: {
+    initialRules?: { field: string; operator: string; value: string }[];
+    onChange: (value: string) => void;
+  }) => (
     <input
       aria-label="Trigger mock input"
+      defaultValue={
+        initialRules
+          ? initialRules.map((r) => `${r.field} ${r.operator} ${r.value}`).join(" AND ")
+          : ""
+      }
       onChange={(event) => onChange(event.target.value)}
       placeholder="Trigger mock input"
       type="text"
@@ -113,5 +124,29 @@ describe("CreatePolicyPageClient", () => {
     });
 
     expect(screen.getByText(/policy created successfully/i)).toBeInTheDocument();
+  });
+
+  it("restores trigger condition builder rules from draft when going back to configure step", () => {
+    localStorage.setItem(
+      "stellarinsure-policy-draft",
+      JSON.stringify({
+        policyType: "weather",
+        coverageAmount: "5000",
+        premium: "120",
+        triggerCondition: "temperature > 25 AND rainfall > 50",
+        duration: "90",
+        oracleProvider: "weatherlink-prime",
+      }),
+    );
+    render(<CreatePolicyPageClient />);
+
+    expect(screen.getByRole("heading", { name: /review your policy/i })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /back/i }));
+
+    expect(screen.getByRole("heading", { name: /configure your policy/i })).toBeInTheDocument();
+
+    const triggerInput = screen.getByPlaceholderText("Trigger mock input") as HTMLInputElement;
+    expect(triggerInput.value).toBe("temperature > 25 AND rainfall > 50");
   });
 });

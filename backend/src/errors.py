@@ -75,7 +75,7 @@ class InvalidStorageTokenError(StellarInsureError):
 
 class FileTooLargeError(StellarInsureError):
     def __init__(self, detail: str = "File size exceeds limit"):
-        super().__init__(status.HTTP_400_BAD_REQUEST, detail, "STORAGE_003")
+        super().__init__(status.HTTP_413_CONTENT_TOO_LARGE, detail, "STORAGE_003")
 
 class InvalidFileTypeError(StellarInsureError):
     def __init__(self, detail: str = "File type not allowed"):
