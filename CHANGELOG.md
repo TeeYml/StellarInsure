@@ -1,3 +1,10 @@
+# [1.31.0](https://github.com/ChaoLing140/StellarInsure/compare/v1.30.0...v1.31.0) (2026-06-01)
+
+
+### Features
+
+* reject stale oracle prices, improve mobile policy tables, enforce reads expiration and gate lockfile drift ([247b6d8](https://github.com/ChaoLing140/StellarInsure/commit/247b6d816c7b1c7c59f0ea53146f8f4c83a57188))
+
 # 1.0.0 (2026-05-31)
 
 
